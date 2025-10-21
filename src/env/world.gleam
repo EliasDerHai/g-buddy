@@ -53,3 +53,13 @@ pub fn get_location(id: LocationId) -> LocationNode {
 
   LocationNode(id, #(n, e, s, w))
 }
+
+// texts
+pub fn label(id: LocationId) -> String {
+  case id {
+    NoLocation -> "-"
+    Apartment -> "Apartment"
+    BusStop -> "BusStop"
+    Neighbor -> "Neighbor"
+  }
+}
