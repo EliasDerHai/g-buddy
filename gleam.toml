@@ -1,0 +1,23 @@
+name = "app"
+version = "1.0.0"
+target = "javascript"
+
+[dependencies]
+gleam_stdlib = ">= 0.44.0 and < 2.0.0"
+lustre = ">= 5.3.5 and < 6.0.0"
+
+[dev-dependencies]
+gleeunit = ">= 1.0.0 and < 2.0.0"
+lustre_dev_tools = ">= 2.1.3 and < 3.0.0"
+
+[javascript]
+runtime = "node"
+
+[tools.lustre.bin]
+tailwindcss = ".lustre/bin/tailwindcss-macos-arm64/tailwindcss"
+
+[lucide_lustre]
+output_module = "util/icons"
+
+[tools.lustre.dev]
+watch = ["src"]
