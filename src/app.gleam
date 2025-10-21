@@ -17,6 +17,11 @@ pub fn main() {
 
 // UPDATE ----------------------------------------------------------------------
 
-fn update(model: State, msg: Msg) -> #(State, Effect(Msg)) {
-  #(model, effect.none())
+fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
+  case msg {
+    msg.PlayerMove(new_loc) -> #(
+      state.State(..state, p: state.Player(..state.p, location: new_loc)),
+      effect.none(),
+    )
+  }
 }

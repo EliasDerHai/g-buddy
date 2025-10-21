@@ -2,6 +2,7 @@ import env/world.{type LocationId}
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
+import lustre/event
 import msg.{type Msg}
 import state/state.{type State}
 
@@ -66,10 +67,11 @@ fn navigation_button(location_id: LocationId, direction: String) -> Element(Msg)
     [
       attribute.class(base_classes <> " " <> state_classes),
       attribute.disabled(is_disabled),
+      event.on_click(msg.PlayerMove(location_id)),
     ],
     [
       html.div([attribute.class("text-sm")], [html.text(direction)]),
-      html.div([attribute.class("font-bold")], [html.text(label)]),
+      html.i([], [html.text(label)]),
     ],
   )
 }

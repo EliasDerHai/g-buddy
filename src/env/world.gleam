@@ -59,7 +59,7 @@ pub fn label(id: LocationId) -> String {
   case id {
     NoLocation -> "-"
     Apartment -> "Apartment"
-    BusStop -> "BusStop"
+    BusStop -> "Bus-Stop"
     Neighbor -> "Neighbor"
   }
 }
