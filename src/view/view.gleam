@@ -4,7 +4,7 @@ import lustre/element/html
 import msg.{type Msg}
 import state/state.{type State}
 
-pub fn view(model: State) -> Element(Msg) {
+pub fn view(_model: State) -> Element(Msg) {
   html.div([attribute.class("flex h-screen w-screen")], [
     html.div([attribute.class("bg-neutral-900 w-64")], [
       html.text("Left Sidebar"),
