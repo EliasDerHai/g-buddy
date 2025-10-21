@@ -1,25 +1,32 @@
 import env/world.{type LocationId}
+import gleam/int
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
 import msg.{type Msg}
 import state/state.{type State}
+import view/texts
 
 pub fn view(model: State) -> Element(Msg) {
+  let sidebar_attrs = [attribute.class("bg-neutral-900 w-64 flex flex-col p-8")]
+
   html.div([attribute.class("flex h-screen w-screen")], [
-    html.div([attribute.class("bg-neutral-900 w-64")], [
-      html.text("Left Sidebar"),
+    html.div(sidebar_attrs, [
+      { "Health: " <> model.p.health.v |> int.to_string } |> simple_text,
+      { "Job: " <> model.p.job |> texts.job } |> simple_text,
     ]),
     html.div([attribute.class("flex-1")], view_navigation_buttons(model)),
-    html.div([attribute.class("bg-neutral-900 w-64")], [
-      html.text("Right Sidebar"),
+    html.div(sidebar_attrs, [
+      { "Cash: $" <> model.p.money.v |> int.to_string } |> simple_text,
+      { "Weapon: " <> model.p.weapon |> texts.weapon } |> simple_text,
     ]),
   ])
 }
 
 fn view_navigation_buttons(model: State) -> List(Element(Msg)) {
   let location = world.get_location(model.p.location)
+
   let #(n, e, s, w) = location.connections
 
   [
@@ -54,7 +61,7 @@ fn view_navigation_buttons(model: State) -> List(Element(Msg)) {
 }
 
 fn navigation_button(location_id: LocationId, direction: String) -> Element(Msg) {
-  let label = world.label(location_id)
+  let label = texts.location(location_id)
   let is_disabled = location_id == world.NoLocation
 
   let base_classes = "px-6 py-3 rounded-lg font-medium transition-colors"
@@ -74,4 +81,9 @@ fn navigation_button(location_id: LocationId, direction: String) -> Element(Msg)
       html.i([], [html.text(label)]),
     ],
   )
+}
+
+// utils ----------------------------------------
+fn simple_text(t: String) -> Element(a) {
+  html.span([], [html.text(t)])
 }

@@ -1,14 +1,38 @@
 import gleam/list
 import gleam/result
 
+// MAP LAYOUT (n-e-s-w connections)
+// ================================
+//
+//      SlingerCorner
+//            |
+//            |
+//        BusStop -------- Neighbor
+//            |
+//            |
+//        Apartment
+//
+// To add a location:
+// 1. Add it to LocationId enum
+// 2. Add it to all_location_ids list
+// 3. Add its (north, east) connections in the map function below
+// 4. Update this ASCII diagram
+
 pub type LocationId {
   NoLocation
   Apartment
   Neighbor
   BusStop
+  SlingerCorner
 }
 
-const all_location_ids = [NoLocation, Apartment, Neighbor, BusStop]
+const all_location_ids = [
+  NoLocation,
+  Apartment,
+  Neighbor,
+  BusStop,
+  SlingerCorner,
+]
 
 pub type LocationNode {
   LocationNode(
@@ -24,8 +48,9 @@ pub fn get_location(id: LocationId) -> LocationNode {
       // n-e
       NoLocation -> #(NoLocation, NoLocation)
       Apartment -> #(BusStop, NoLocation)
-      BusStop -> #(NoLocation, Neighbor)
+      BusStop -> #(SlingerCorner, Neighbor)
       Neighbor -> #(NoLocation, NoLocation)
+      SlingerCorner -> #(NoLocation, NoLocation)
     }
     #(id, n, e)
   }
@@ -35,31 +60,21 @@ pub fn get_location(id: LocationId) -> LocationNode {
   let s =
     all_partial_nodes
     |> list.find_map(fn(el) {
-      case el.1 {
-        x if x == id -> Ok(el.0)
-        _ -> Error(Nil)
+      case el.1 == id {
+        True -> Ok(el.0)
+        False -> Error(Nil)
       }
     })
     |> result.unwrap(NoLocation)
   let w =
     all_partial_nodes
     |> list.find_map(fn(el) {
-      case el.2 {
-        x if x == id -> Ok(el.0)
-        _ -> Error(Nil)
+      case el.2 == id {
+        True -> Ok(el.0)
+        False -> Error(Nil)
       }
     })
     |> result.unwrap(NoLocation)
 
   LocationNode(id, #(n, e, s, w))
-}
-
-// texts
-pub fn label(id: LocationId) -> String {
-  case id {
-    NoLocation -> "-"
-    Apartment -> "Apartment"
-    BusStop -> "Bus-Stop"
-    Neighbor -> "Neighbor"
-  }
 }
