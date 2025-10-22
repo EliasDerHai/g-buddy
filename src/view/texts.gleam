@@ -1,3 +1,4 @@
+import env/enemy
 import env/world.{type LocationId}
 import state/state
 
@@ -22,5 +23,12 @@ pub fn job(id: state.JobId) -> String {
   case id {
     state.Lookout -> "Lookout"
     state.Slinger -> "Slinger"
+  }
+}
+
+pub fn enemy(id: enemy.EnemyId) -> String {
+  case id {
+    enemy.Lvl1 -> "Aggro Junkie"
+    enemy.Lvl2 -> "Goon"
   }
 }

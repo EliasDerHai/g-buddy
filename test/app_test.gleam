@@ -34,3 +34,11 @@ pub fn location_bidirectional_connections_test() {
   let #(_n, _e, _s, w) = neighbor.connections
   assert w == world.BusStop
 }
+
+pub fn add_limit_max_test() {
+  let e = state.Energy(90, 100) |> state.add_energy(20)
+  assert e.v == 100
+
+  let h = state.Health(90, 100) |> state.add_health(20)
+  assert h.v == 100
+}

@@ -1,7 +1,14 @@
+import env/enemy.{type EnemyId}
 import env/world.{type LocationId}
+import gleam/int
+import gleam/option.{type Option}
 
 pub type State {
-  State(p: Player)
+  State(p: Player, fight: Option(Fight))
+}
+
+pub type Fight {
+  Fight(enemy: EnemyId, round: Int)
 }
 
 pub type Money {
@@ -58,5 +65,19 @@ pub fn init() -> State {
       world.Apartment,
       Lookout,
     )
-  State(p)
+  State(p, option.None)
+}
+
+fn min_max(v: Int, min: Int, max: Int) {
+  v
+  |> int.min(max)
+  |> int.max(min)
+}
+
+pub fn add_energy(current: Energy, v: Int) {
+  Energy(current.v + v |> min_max(0, current.max), current.max)
+}
+
+pub fn add_health(current: Health, v: Int) {
+  Health(current.v + v |> min_max(0, current.max), current.max)
 }

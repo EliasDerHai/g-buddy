@@ -1,11 +1,15 @@
+import env/job
 import env/world.{type LocationId}
 import gleam/int
+import gleam/list
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
-import msg.{type Msg}
+import msg.{type Msg, PlayerWork}
+import state/check
 import state/state.{type State}
+import util/list_extension
 import view/texts
 
 pub fn view(model: State) -> Element(Msg) {
@@ -24,8 +28,8 @@ pub fn view(model: State) -> Element(Msg) {
   ])
 }
 
-fn view_navigation_buttons(model: State) -> List(Element(Msg)) {
-  let location = world.get_location(model.p.location)
+fn view_navigation_buttons(state: State) -> List(Element(Msg)) {
+  let location = world.get_location(state.p.location)
 
   let #(n, e, s, w) = location.connections
 
@@ -54,7 +58,11 @@ fn view_navigation_buttons(model: State) -> List(Element(Msg)) {
         [
           attribute.class("flex items-center justify-center h-full w-full p-16"),
         ],
-        [html.text("Center Content Area")],
+        []
+          |> list_extension.append_when(
+            { state.p.job |> job.job_stats }.workplace == state.p.location,
+            simple_button("Work", PlayerWork, check.can_work(state.p)),
+          ),
       ),
     ]),
   ]
@@ -86,4 +94,23 @@ fn navigation_button(location_id: LocationId, direction: String) -> Element(Msg)
 // utils ----------------------------------------
 fn simple_text(t: String) -> Element(a) {
   html.span([], [html.text(t)])
+}
+
+fn simple_button(t: String, msg: Msg, is_disabled: Bool) -> Element(Msg) {
+  let base_classes = "px-6 py-3 rounded-lg font-medium transition-colors"
+  let state_classes = case is_disabled {
+    True -> "bg-gray-700 text-gray-500 cursor-not-allowed"
+    False -> "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+  }
+
+  html.button(
+    [
+      attribute.class(base_classes <> " " <> state_classes),
+      attribute.disabled(is_disabled),
+      event.on_click(msg),
+    ],
+    [
+      html.span([attribute.class("text-sm")], [html.text(t)]),
+    ],
+  )
 }

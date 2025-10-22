@@ -1,5 +1,8 @@
 import env/enemy.{type EnemyId}
+import env/world.{type LocationId}
+import gleam/float
 import gleam/list
+import gleam/option.{type Option}
 import gleam/string
 import state/state.{type JobId}
 
@@ -9,6 +12,7 @@ pub type JobStats {
     base_income: Int,
     energy_cost: Int,
     trouble: List(Trouble),
+    workplace: LocationId,
   )
 }
 
@@ -19,13 +23,26 @@ pub type Trouble {
 pub fn job_stats(id: JobId) {
   case id {
     state.Lookout ->
-      JobStats(id, base_income: 30, energy_cost: 55, trouble: [
-        Trouble(0.1, enemy.Lvl1),
-      ])
+      JobStats(
+        id,
+        base_income: 30,
+        energy_cost: 55,
+        trouble: [
+          Trouble(0.1, enemy.Lvl1),
+        ],
+        workplace: world.SlingerCorner,
+      )
     state.Slinger ->
-      JobStats(id, base_income: 30, energy_cost: 55, trouble: [
-        Trouble(0.1, enemy.Lvl1),
-      ])
+      JobStats(
+        id,
+        base_income: 40,
+        energy_cost: 55,
+        trouble: [
+          Trouble(0.1, enemy.Lvl1),
+          Trouble(0.1, enemy.Lvl2),
+        ],
+        workplace: world.SlingerCorner,
+      )
   }
   |> assert_bounds
 }
@@ -44,4 +61,12 @@ fn assert_bounds(s: JobStats) -> JobStats {
     check(trouble.chance <=. 1.0, "more than 100% chance")
   })
   s
+}
+
+pub fn roll_trouble_dice(troubles: List(Trouble)) -> Option(EnemyId) {
+  troubles
+  |> list.shuffle
+  |> list.find(fn(t) { float.random() <=. t.chance })
+  |> option.from_result
+  |> option.map(fn(o) { o.enemy })
 }
