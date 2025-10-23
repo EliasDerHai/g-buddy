@@ -21,6 +21,7 @@ pub fn main() {
 
 fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
   let p = state.p
+  echo msg
   case msg {
     msg.PlayerMove(location) -> set_p(state, Player(..p, location:)) |> no_eff
     msg.PlayerWork -> handle_work(p) |> no_eff
@@ -28,11 +29,12 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
 }
 
 fn handle_work(p: Player) -> State {
+  let job_stats = p.job |> job.job_stats
   let energy =
     p.energy
-    |> state.add_energy(-{ p.job |> job.job_stats }.energy_cost)
-
-  let p = Player(..p, energy: energy)
+    |> state.add_energy(-job_stats.energy_cost)
+  let money = p.money |> state.add_money(job_stats.base_income)
+  let p = Player(..p, energy:, money:)
   let fight =
     {
       p.job

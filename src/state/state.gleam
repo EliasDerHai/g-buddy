@@ -81,3 +81,7 @@ pub fn add_energy(current: Energy, v: Int) {
 pub fn add_health(current: Health, v: Int) {
   Health(current.v + v |> min_max(0, current.max), current.max)
 }
+
+pub fn add_money(current: Money, v: Int) -> Money {
+  Money(current.v + v)
+}
