@@ -100,14 +100,17 @@ fn min_max(v: Int, min: Int, max: Int) {
   |> int.max(min)
 }
 
+// can never go out of bounds [0,100]
 pub fn add_energy(current: Energy, v: Int) {
   Energy(current.v + v |> min_max(0, current.max), current.max)
 }
 
+// can go negative -> game-over condition
 pub fn add_health(current: Health, v: Int) {
-  Health(current.v + v |> min_max(0, current.max), current.max)
+  Health(current.v + v |> int.max(current.max), current.max)
 }
 
+// can go negative -> debt
 pub fn add_money(current: Money, v: Int) -> Money {
   Money(current.v + v)
 }

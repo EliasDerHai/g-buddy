@@ -32,9 +32,6 @@ pub fn player_turn(p: Player, fight: Fight, move: FightMove) -> State {
       let real_dmg = dmg_calc(dmg, crit, fight.enemy.def)
       let health = fight.enemy.health - real_dmg
 
-      echo health
-      echo real_dmg
-
       let enemy = Enemy(..fight.enemy, health:)
       let next_phase = case enemy.health > 0 {
         True -> EnemyTurn
@@ -59,16 +56,16 @@ pub fn enemy_turn(p: Player, fight: Fight) -> State {
   let enemy = fight.enemy
   let w_stats = p.weapon |> weapon.weapon_stats
   let real_dmg = dmg_calc(enemy.dmg, enemy.crit, w_stats.def)
-  let health = p.health.v - real_dmg
+  let health = p.health |> state.add_health(-real_dmg)
 
-  let next_phase = case health > 0, fight.flee_pending {
+  let next_phase = case health.v > 0, fight.flee_pending {
     True, True -> PlayerFled
     True, False -> PlayerTurn
     False, _ -> EnemyWon
   }
 
   State(
-    p: Player(..p, health: state.Health(health, p.health.max)),
+    p: Player(..p, health:),
     fight: Some(
       Fight(..fight, phase: next_phase, last_enemy_dmg: Some(real_dmg)),
     ),
