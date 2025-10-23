@@ -28,7 +28,7 @@ pub fn job(id: state.JobId) -> String {
 
 pub fn enemy(id: enemy.EnemyId) -> String {
   case id {
-    enemy.Lvl1 -> "Aggro Junkie"
+    enemy.Lvl1 -> "Drunkard"
     enemy.Lvl2 -> "Goon"
   }
 }

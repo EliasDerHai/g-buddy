@@ -8,9 +8,12 @@ import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
-import msg.{type Msg, PlayerMove, PlayerWork}
+import msg.{type Msg, Attack, End, Flee, PlayerFightMove, PlayerMove, PlayerWork}
 import state/check
-import state/state.{type State}
+import state/state.{
+  type Fight, type Player, type State, EnemyTurn, EnemyWon, PlayerFled,
+  PlayerTurn, PlayerWon,
+}
 import util/list_extension
 import view/icons
 import view/texts
@@ -31,11 +34,14 @@ pub fn view(model: State) -> Element(Msg) {
         { "Weapon: " <> model.p.weapon |> texts.weapon } |> simple_text,
       ]),
     ]),
-    modal(
-      model.fight |> option.is_some,
-      Some(PlayerMove(model.p.location)),
-      "hello modal" |> simple_text |> list_extension.of_one,
-    ),
+    {
+      let is_open = model.fight |> option.is_some
+      let content = case model.fight {
+        None -> []
+        Some(fight) -> view_fight(model.p, fight)
+      }
+      modal(is_open, None, content)
+    },
   ])
 }
 
@@ -102,7 +108,63 @@ fn navigation_button(location_id: LocationId, direction: String) -> Element(Msg)
   )
 }
 
+fn view_fight(p: Player, fight: Fight) -> List(Element(Msg)) {
+  [
+    html.h2([attribute.class("text-2xl font-bold mb-4")], [
+      html.text("Fight!"),
+    ]),
+    // Stats
+    html.div([attribute.class("flex justify-between mb-6")], [
+      html.div([], [
+        html.p([attribute.class("font-bold")], [html.text("You")]),
+        html.p([], [
+          html.text(
+            "HP: "
+            <> int.to_string(p.health.v)
+            <> "/"
+            <> int.to_string(p.health.max),
+          ),
+        ]),
+      ]),
+      html.div([], [
+        html.p([attribute.class("font-bold")], [
+          html.text(texts.enemy(fight.enemy.id)),
+        ]),
+        html.p([], [html.text("HP: " <> int.to_string(fight.enemy.health))]),
+      ]),
+    ]),
+    // Phase display
+    html.div([attribute.class("mb-6 text-center")], [
+      case fight.phase {
+        PlayerTurn ->
+          html.p([attribute.class("text-blue-400")], [html.text("Your turn")])
+        EnemyTurn ->
+          html.p([attribute.class("text-red-400")], [html.text("Enemy turn")])
+        PlayerWon ->
+          html.p([attribute.class("text-green-400")], [html.text("Victory!")])
+        EnemyWon ->
+          html.p([attribute.class("text-red-400")], [html.text("Defeated!")])
+        PlayerFled ->
+          html.p([attribute.class("text-yellow-400")], [html.text("Fled!")])
+      },
+    ]),
+    // Actions
+    html.div([attribute.class("flex gap-4 justify-center")], case fight.phase {
+      PlayerTurn -> [
+        simple_button("Attack", PlayerFightMove(Attack), False),
+        simple_button("Flee", PlayerFightMove(Flee), False),
+      ]
+      PlayerWon | EnemyWon | PlayerFled -> [
+        simple_button("Close", PlayerFightMove(End), False),
+      ]
+      EnemyTurn ->
+        panic as "Illegal state - EnemyTurn has to be processed before view"
+    }),
+  ]
+}
+
 // utils ----------------------------------------
+
 fn simple_text(t: String) -> Element(a) {
   html.span([], [html.text(t)])
 }

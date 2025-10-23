@@ -51,6 +51,7 @@ pub type Phase {
   EnemyTurn
   PlayerWon
   EnemyWon
+  PlayerFled
 }
 
 // INIT -------------------------------------------------

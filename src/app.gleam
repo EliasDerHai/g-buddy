@@ -2,10 +2,10 @@
 
 import env/fight
 import env/job
-import gleam/option
+import gleam/option.{Some}
 import lustre
 import lustre/effect.{type Effect}
-import msg.{type Msg}
+import msg.{type FightMove, type Msg}
 import state/state.{type Player, type State, Player, State}
 import view/view
 
@@ -22,13 +22,25 @@ pub fn main() {
 
 fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
   let p = state.p
-  echo msg
   case msg {
     msg.PlayerMove(location) -> set_p(state, Player(..p, location:)) |> no_eff
     msg.PlayerWork -> handle_work(p) |> no_eff
-    // TODO: put together the pieces of the fight mechanic 
-    msg.PlayerFightMove(_) -> todo
+    msg.PlayerFightMove(move) -> handle_fight_move(state, move)
   }
+}
+
+fn handle_fight_move(state: State, move: FightMove) -> #(State, Effect(Msg)) {
+  let assert Some(fight) = state.fight
+    as "Illegal state - fight move outside of fight"
+  let next_state = fight.player_turn(state.p, fight, move)
+
+  // immediately do enemy-turn (if it's his turn)
+  case next_state {
+    State(p, option.Some(fight)) if fight.phase == state.EnemyTurn ->
+      fight.enemy_turn(p, fight)
+    s -> s
+  }
+  |> no_eff
 }
 
 fn handle_work(p: Player) -> State {

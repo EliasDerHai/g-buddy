@@ -3,11 +3,12 @@ import env/weapon
 import gleam/bool
 import gleam/float
 import gleam/int
+import gleam/list
 import gleam/option.{None, Some}
 import msg.{type FightMove}
 import state/state.{
-  type Fight, type Player, type State, EnemyTurn, EnemyWon, Fight, Player,
-  PlayerTurn, PlayerWon, State,
+  type Fight, type Phase, type Player, type State, EnemyTurn, EnemyWon, Fight,
+  Player, PlayerFled, PlayerTurn, PlayerWon, State,
 }
 
 pub fn start_fight(enemy: EnemyId, p: Player) -> Fight {
@@ -22,13 +23,19 @@ pub fn start_fight(enemy: EnemyId, p: Player) -> Fight {
 }
 
 pub fn player_turn(p: Player, fight: Fight, move: FightMove) -> State {
-  use <- bool.guard(fight.flee_pending, State(p:, fight: None))
-
   case move {
     msg.Attack -> {
+      let assert state.PlayerTurn = fight.phase
+        as "Illegal state - cannot attack, not player's turn"
+
       let weapon.WeaponStat(id: _, dmg:, def: _, crit:) =
         p.weapon |> weapon.weapon_stats
-      let health = fight.enemy.health - dmg_calc(dmg, crit, fight.enemy.def)
+      let real_dmg = dmg_calc(dmg, crit, fight.enemy.def)
+      let health = fight.enemy.health - real_dmg
+
+      echo health
+      echo real_dmg
+
       let enemy = Enemy(..fight.enemy, health:)
       let next_phase = case enemy.health > 0 {
         True -> EnemyTurn
@@ -37,7 +44,11 @@ pub fn player_turn(p: Player, fight: Fight, move: FightMove) -> State {
 
       State(p:, fight: Some(Fight(next_phase, enemy, False)))
     }
-    msg.Flee -> State(p:, fight: Some(Fight(..fight, flee_pending: True)))
+    msg.Flee -> State(p:, fight: Some(Fight(EnemyTurn, fight.enemy, True)))
+    msg.End -> {
+      let assert True = fight.phase |> is_finite_phase as "Illegal state"
+      State(p:, fight: None)
+    }
   }
 }
 
@@ -45,6 +56,20 @@ pub fn enemy_turn(p: Player, fight: Fight) -> State {
   let enemy = fight.enemy
   let w_stats = p.weapon |> weapon.weapon_stats
   let health = p.health.v - dmg_calc(enemy.dmg, enemy.crit, w_stats.def)
+
+  // Check if player fled - if so, end fight after enemy attack
+  use <- bool.guard(
+    fight.flee_pending,
+    State(
+      p: Player(..p, health: state.Health(health, p.health.max)),
+      fight: Some(
+        Fight(..fight, phase: case health > 0 {
+          False -> EnemyWon
+          True -> PlayerFled
+        }),
+      ),
+    ),
+  )
 
   let next_phase = case health > 0 {
     True -> PlayerTurn
@@ -65,4 +90,8 @@ fn dmg_calc(dmg: Int, crit: Float, def: Int) {
 
   dmg * crit_multiplier - def
   |> int.max(0)
+}
+
+fn is_finite_phase(phase: Phase) -> Bool {
+  [PlayerFled, PlayerWon, EnemyWon] |> list.contains(phase)
 }

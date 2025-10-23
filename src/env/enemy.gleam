@@ -11,8 +11,8 @@ pub type Enemy {
 
 pub fn get_enemy(id: EnemyId) {
   case id {
-    Lvl1 -> Enemy(id, dmg: 5, def: 5, crit: 0.05, health: 4, energy: 50)
-    Lvl2 -> Enemy(id, dmg: 10, def: 8, crit: 0.15, health: 6, energy: 50)
+    Lvl1 -> Enemy(id, dmg: 5, def: 0, crit: 0.05, health: 4, energy: 50)
+    Lvl2 -> Enemy(id, dmg: 10, def: 0, crit: 0.15, health: 6, energy: 50)
   }
   |> assert_bounds
 }
