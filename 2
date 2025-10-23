@@ -1,5 +1,6 @@
 import env/enemy.{type EnemyId, Enemy}
 import env/weapon
+import gleam/bool
 import gleam/float
 import gleam/int
 import gleam/list
@@ -61,10 +62,25 @@ pub fn enemy_turn(p: Player, fight: Fight) -> State {
   let real_dmg = dmg_calc(enemy.dmg, enemy.crit, w_stats.def)
   let health = p.health.v - real_dmg
 
+  // Check if player fled - if so, end fight after enemy attack
+  use <- bool.guard(
+    fight.flee_pending,
+    State(
+      p: Player(..p, health: state.Health(health, p.health.max)),
+      fight: Some(
+        Fight(..fight, phase: case health > 0 {
+          False -> EnemyWon
+          True -> PlayerFled
+        }),
+      ),
+    ),
+  )
+
   let next_phase = case health > 0, fight.flee_pending {
     True, True -> PlayerFled
     True, False -> PlayerTurn
-    False, _ -> EnemyWon
+    _, False -> EnemyWon
+    _, _ -> todo
   }
 
   State(

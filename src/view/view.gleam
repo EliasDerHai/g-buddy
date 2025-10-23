@@ -115,23 +115,47 @@ fn view_fight(p: Player, fight: Fight) -> List(Element(Msg)) {
     ]),
     // Stats
     html.div([attribute.class("flex justify-between mb-6")], [
-      html.div([], [
-        html.p([attribute.class("font-bold")], [html.text("You")]),
-        html.p([], [
-          html.text(
-            "HP: "
-            <> int.to_string(p.health.v)
-            <> "/"
-            <> int.to_string(p.health.max),
+      html.div(
+        [],
+        [
+          html.p([attribute.class("font-bold")], [html.text("You")]),
+          html.p([], [
+            html.text(
+              "HP: "
+              <> int.to_string(p.health.v)
+              <> "/"
+              <> int.to_string(p.health.max),
+            ),
+          ]),
+        ]
+          |> list_extension.append_when(
+            fight.last_player_dmg |> option.is_some(),
+            html.p([attribute.class("text-red-100")], [
+              html.text(
+                "Dmg dealt: "
+                <> fight.last_player_dmg |> option.unwrap(0) |> int.to_string,
+              ),
+            ]),
           ),
-        ]),
-      ]),
-      html.div([], [
-        html.p([attribute.class("font-bold")], [
-          html.text(texts.enemy(fight.enemy.id)),
-        ]),
-        html.p([], [html.text("HP: " <> int.to_string(fight.enemy.health))]),
-      ]),
+      ),
+      html.div(
+        [],
+        [
+          html.p([attribute.class("font-bold")], [
+            html.text(texts.enemy(fight.enemy.id)),
+          ]),
+          html.p([], [html.text("HP: " <> int.to_string(fight.enemy.health))]),
+        ]
+          |> list_extension.append_when(
+            fight.last_enemy_dmg |> option.is_some(),
+            html.p([attribute.class("text-red-100")], [
+              html.text(
+                "Dmg dealt: "
+                <> fight.last_enemy_dmg |> option.unwrap(0) |> int.to_string,
+              ),
+            ]),
+          ),
+      ),
     ]),
     // Phase display
     html.div([attribute.class("mb-6 text-center")], [

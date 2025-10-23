@@ -1,7 +1,7 @@
 import env/enemy.{type Enemy}
 import env/world.{type LocationId}
 import gleam/int
-import gleam/option.{type Option}
+import gleam/option.{type Option, None}
 
 pub type State {
   State(p: Player, fight: Option(Fight))
@@ -43,7 +43,13 @@ pub type Player {
 // fight
 
 pub type Fight {
-  Fight(phase: Phase, enemy: Enemy, flee_pending: Bool)
+  Fight(
+    phase: Phase,
+    enemy: Enemy,
+    flee_pending: Bool,
+    last_player_dmg: Option(Int),
+    last_enemy_dmg: Option(Int),
+  )
 }
 
 pub type Phase {
@@ -78,7 +84,13 @@ pub fn init() -> State {
   State(
     p,
     // TODO: revert to option.None
-    option.Some(Fight(PlayerTurn, enemy.Lvl1 |> enemy.get_enemy, False)),
+    option.Some(Fight(
+      PlayerTurn,
+      enemy.Lvl1 |> enemy.get_enemy,
+      False,
+      None,
+      None,
+    )),
   )
 }
 
