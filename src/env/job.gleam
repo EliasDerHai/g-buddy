@@ -28,11 +28,7 @@ pub fn job_stats(id: JobId) {
         base_income: 30,
         energy_cost: 55,
         trouble: [
-          Trouble(
-            // TODO: revert to 0.1
-            1.0,
-            enemy.Lvl1,
-          ),
+          Trouble(0.1, enemy.Lvl1),
         ],
         workplace: world.SlingerCorner,
       )

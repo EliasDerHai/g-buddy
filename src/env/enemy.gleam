@@ -5,19 +5,19 @@ pub type EnemyId {
   Lvl2
 }
 
-pub type EnemyStats {
-  Enemy(id: EnemyId, dmg: Int, def: Int, crit: Float, health: Int)
+pub type Enemy {
+  Enemy(id: EnemyId, dmg: Int, def: Int, crit: Float, health: Int, energy: Int)
 }
 
 pub fn get_enemy(id: EnemyId) {
   case id {
-    Lvl1 -> Enemy(id, dmg: 5, def: 5, crit: 0.05, health: 4)
-    Lvl2 -> Enemy(id, dmg: 10, def: 8, crit: 0.15, health: 6)
+    Lvl1 -> Enemy(id, dmg: 5, def: 5, crit: 0.05, health: 4, energy: 50)
+    Lvl2 -> Enemy(id, dmg: 10, def: 8, crit: 0.15, health: 6, energy: 50)
   }
   |> assert_bounds
 }
 
-fn assert_bounds(s: EnemyStats) -> EnemyStats {
+fn assert_bounds(s: Enemy) -> Enemy {
   let check = fn(b: Bool, err: String) {
     case b {
       False -> panic as { s.id |> string.inspect <> err }

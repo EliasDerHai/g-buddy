@@ -1,11 +1,12 @@
 // IMPORTS ---------------------------------------------------------------------
 
+import env/fight
 import env/job
 import gleam/option
 import lustre
 import lustre/effect.{type Effect}
 import msg.{type Msg}
-import state/state.{type Player, type State, Fight, Player, State}
+import state/state.{type Player, type State, Player, State}
 import view/view
 
 // MAIN ------------------------------------------------------------------------
@@ -25,6 +26,8 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
   case msg {
     msg.PlayerMove(location) -> set_p(state, Player(..p, location:)) |> no_eff
     msg.PlayerWork -> handle_work(p) |> no_eff
+    // TODO: put together the pieces of the fight mechanic 
+    msg.PlayerFightMove(_) -> todo
   }
 }
 
@@ -41,7 +44,7 @@ fn handle_work(p: Player) -> State {
       |> job.job_stats
     }.trouble
     |> job.roll_trouble_dice
-    |> option.map(fn(enemy) { Fight(enemy, 0) })
+    |> option.map(fn(e_id) { fight.start_fight(e_id, p) })
 
   State(fight:, p:)
 }

@@ -1,14 +1,10 @@
-import env/enemy.{type EnemyId}
+import env/enemy.{type Enemy}
 import env/world.{type LocationId}
 import gleam/int
 import gleam/option.{type Option}
 
 pub type State {
   State(p: Player, fight: Option(Fight))
-}
-
-pub type Fight {
-  Fight(enemy: EnemyId, round: Int)
 }
 
 pub type Money {
@@ -44,6 +40,19 @@ pub type Player {
   )
 }
 
+// fight
+
+pub type Fight {
+  Fight(phase: Phase, enemy: Enemy, flee_pending: Bool)
+}
+
+pub type Phase {
+  PlayerTurn
+  EnemyTurn
+  PlayerWon
+  EnemyWon
+}
+
 // INIT -------------------------------------------------
 pub const start_money = 100
 
@@ -65,7 +74,11 @@ pub fn init() -> State {
       world.Apartment,
       Lookout,
     )
-  State(p, option.None)
+  State(
+    p,
+    // TODO: revert to option.None
+    option.Some(Fight(PlayerTurn, enemy.Lvl1 |> enemy.get_enemy, False)),
+  )
 }
 
 fn min_max(v: Int, min: Int, max: Int) {
