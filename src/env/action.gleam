@@ -1,6 +1,6 @@
 import env/world.{type LocationId}
 import gleam/list
-import state/state.{type Player, type State, Player, State}
+import state/state.{type Player, type SkillId, type State, Player, State}
 
 pub type ActionId {
   BusTo(LocationId)
@@ -24,7 +24,7 @@ pub type ActionActivationCost {
 
 pub type ActionSpecialEffect {
   BusToEffect(destination: LocationId)
-  // TODO: add gym reward 
+  SkillIncreaseEffect(id: SkillId, increase: Int)
   SleepEffect
 }
 
@@ -41,7 +41,12 @@ const all_actions = [
     [Money(2)],
     [BusToEffect(world.BusStop)],
   ),
-  Action(Workout, world.Gym, [Energy(30)], []),
+  Action(
+    Workout,
+    world.Gym,
+    [Energy(30)],
+    [SkillIncreaseEffect(state.Strength, 1)],
+  ),
   Action(Sleep, world.Apartment, [], [SleepEffect]),
 ]
 
@@ -68,6 +73,8 @@ fn apply_specials(p: Player, requirements: List(ActionSpecialEffect)) -> Player 
           energy: state.Energy(p.energy.max, p.energy.max),
           day_count: p.day_count + 1,
         )
+      SkillIncreaseEffect(id:, increase:) ->
+        Player(..p, skills: p.skills |> state.add_skill(id, increase))
     }
   })
 }

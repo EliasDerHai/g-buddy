@@ -27,12 +27,12 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
   case msg {
     msg.PlayerMove(location) -> set_p(state, Player(..p, location:)) |> no_eff
     msg.PlayerWork -> handle_work(p) |> no_eff
-    msg.PlayerFightMove(move) -> handle_fight_move(state, move)
+    msg.PlayerFightMove(move) -> handle_fight_move(state, move) |> no_eff
     msg.PlayerAction(action) -> handle_action(state, action) |> no_eff
   }
 }
 
-fn handle_fight_move(state: State, move: FightMove) -> #(State, Effect(Msg)) {
+fn handle_fight_move(state: State, move: FightMove) -> State {
   let assert Some(fight) = state.fight
     as "Illegal state - fight move outside of fight"
   let next_state = fight.player_turn(state.p, fight, move)
@@ -43,7 +43,6 @@ fn handle_fight_move(state: State, move: FightMove) -> #(State, Effect(Msg)) {
       fight.enemy_turn(p, fight)
     s -> s
   }
-  |> no_eff
 }
 
 fn handle_work(p: Player) -> State {

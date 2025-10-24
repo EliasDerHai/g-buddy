@@ -29,6 +29,17 @@ pub type JobId {
   Slinger
 }
 
+pub type SkillId {
+  Strength
+  Dexterity
+  Intelligence
+  Charm
+}
+
+pub type Skills {
+  Skills(strength: Int, dexterity: Int, intelligence: Int, charm: Int)
+}
+
 pub type Player {
   Player(
     money: Money,
@@ -38,6 +49,7 @@ pub type Player {
     location: LocationId,
     job: JobId,
     day_count: Int,
+    skills: Skills,
   )
 }
 
@@ -82,17 +94,19 @@ pub fn init() -> State {
       world.Apartment,
       Lookout,
       0,
+      Skills(0, 0, 0, 0),
     )
   State(
     p,
-    // TODO: revert to option.None
-    option.Some(Fight(
-      PlayerTurn,
-      enemy.Lvl1 |> enemy.get_enemy,
-      False,
-      None,
-      None,
-    )),
+    None,
+    //
+  //     option.Some(Fight(
+  //     PlayerTurn,
+  //     enemy.Lvl1 |> enemy.get_enemy,
+  //     False,
+  //     None,
+  //     None,
+  //   )),
   )
 }
 
@@ -115,4 +129,13 @@ pub fn add_health(current: Health, v: Int) {
 // can go negative -> debt
 pub fn add_money(current: Money, v: Int) -> Money {
   Money(current.v + v)
+}
+
+pub fn add_skill(current: Skills, id: SkillId, v: Int) -> Skills {
+  case id {
+    Charm -> Skills(..current, charm: current.charm + v)
+    Dexterity -> Skills(..current, dexterity: current.dexterity + v)
+    Intelligence -> Skills(..current, intelligence: current.intelligence + v)
+    Strength -> Skills(..current, strength: current.strength + v)
+  }
 }

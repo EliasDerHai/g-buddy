@@ -37,6 +37,14 @@ pub fn view(model: State) -> Element(Msg) {
         { "Day: " <> model.p.day_count |> int.to_string } |> simple_text,
         { "Cash: $" <> model.p.money.v |> int.to_string } |> simple_text,
         { "Weapon: " <> model.p.weapon |> texts.weapon } |> simple_text,
+        { "Strength: " <> model.p.skills.strength |> int.to_string }
+          |> simple_text,
+        { "Dexterity: " <> model.p.skills.dexterity |> int.to_string }
+          |> simple_text,
+        { "Intelligence: " <> model.p.skills.intelligence |> int.to_string }
+          |> simple_text,
+        { "Charm: " <> model.p.skills.charm |> int.to_string }
+          |> simple_text,
       ]),
     ]),
     {
