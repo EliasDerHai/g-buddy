@@ -5,6 +5,7 @@ import state/state.{type Player, type State, Player, State}
 pub type ActionId {
   BusTo(LocationId)
   Workout
+  Sleep
 }
 
 pub type Action {
@@ -24,6 +25,7 @@ pub type ActionActivationCost {
 pub type ActionSpecialEffect {
   BusToEffect(destination: LocationId)
   // TODO: add gym reward 
+  SleepEffect
 }
 
 const all_actions = [
@@ -40,6 +42,7 @@ const all_actions = [
     [BusToEffect(world.BusStop)],
   ),
   Action(Workout, world.Gym, [Energy(30)], []),
+  Action(Sleep, world.Apartment, [], [SleepEffect]),
 ]
 
 pub fn get_action_by_location(location: LocationId) -> List(Action) {
@@ -59,6 +62,12 @@ fn apply_specials(p: Player, requirements: List(ActionSpecialEffect)) -> Player 
   list.fold(requirements, p, fn(p, req) {
     case req {
       BusToEffect(destination:) -> Player(..p, location: destination)
+      SleepEffect ->
+        Player(
+          ..p,
+          energy: state.Energy(p.energy.max, p.energy.max),
+          day_count: p.day_count + 1,
+        )
     }
   })
 }

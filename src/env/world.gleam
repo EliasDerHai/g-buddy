@@ -43,6 +43,8 @@ const all_location_ids = [
   Neighbor,
   BusStop,
   SlingerCorner,
+  CityCenter,
+  Gym,
 ]
 
 pub type LocationNode {

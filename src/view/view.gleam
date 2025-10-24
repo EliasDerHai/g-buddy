@@ -34,6 +34,7 @@ pub fn view(model: State) -> Element(Msg) {
       ]),
       html.div([attribute.class("flex-1")], view_navigation_buttons(model)),
       html.div(sidebar_attrs, [
+        { "Day: " <> model.p.day_count |> int.to_string } |> simple_text,
         { "Cash: $" <> model.p.money.v |> int.to_string } |> simple_text,
         { "Weapon: " <> model.p.weapon |> texts.weapon } |> simple_text,
       ]),

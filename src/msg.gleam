@@ -1,4 +1,4 @@
-import env/action.{type Action, type ActionId}
+import env/action.{type Action}
 import env/world.{type LocationId}
 
 pub type Msg {

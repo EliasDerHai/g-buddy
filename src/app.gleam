@@ -1,9 +1,8 @@
 // IMPORTS ---------------------------------------------------------------------
 
-import env/action.{type Action, type ActionId}
+import env/action.{type Action}
 import env/fight
 import env/job
-import gleam/list
 import gleam/option.{Some}
 import lustre
 import lustre/effect.{type Effect}

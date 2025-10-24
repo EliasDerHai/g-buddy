@@ -37,6 +37,7 @@ pub type Player {
     weapon: WeaponId,
     location: LocationId,
     job: JobId,
+    day_count: Int,
   )
 }
 
@@ -80,6 +81,7 @@ pub fn init() -> State {
       NoWeapon,
       world.Apartment,
       Lookout,
+      0,
     )
   State(
     p,

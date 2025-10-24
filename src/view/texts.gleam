@@ -43,5 +43,6 @@ pub fn action(id: action.ActionId) {
       <> dest
       |> location
     action.Workout -> "Workout"
+    action.Sleep -> "End day"
   }
 }
