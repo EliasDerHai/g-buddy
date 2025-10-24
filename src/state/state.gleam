@@ -107,7 +107,7 @@ pub fn add_energy(current: Energy, v: Int) {
 
 // can go negative -> game-over condition
 pub fn add_health(current: Health, v: Int) {
-  Health(current.v + v |> int.max(current.max), current.max)
+  Health(current.v + v |> int.min(current.max), current.max)
 }
 
 // can go negative -> debt

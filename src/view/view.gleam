@@ -1,3 +1,4 @@
+import env/action
 import env/job
 import env/world.{type LocationId}
 import gleam/bool
@@ -8,7 +9,10 @@ import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
-import msg.{type Msg, Attack, End, Flee, PlayerFightMove, PlayerMove, PlayerWork}
+import msg.{
+  type Msg, Attack, End, Flee, PlayerAction, PlayerFightMove, PlayerMove,
+  PlayerWork,
+}
 import state/check
 import state/state.{
   type Fight, type Player, type State, EnemyTurn, EnemyWon, PlayerFled,
@@ -73,13 +77,20 @@ fn view_navigation_buttons(state: State) -> List(Element(Msg)) {
       // Center
       html.div(
         [
-          attribute.class("flex items-center justify-center h-full w-full p-16"),
+          attribute.class(
+            "flex flex-col gap-4 items-center justify-center h-full w-full p-16",
+          ),
         ],
         []
           |> list_extension.append_when(
             { state.p.job |> job.job_stats }.workplace == state.p.location,
-            simple_button("Work", PlayerWork, !check.can_work(state.p)),
-          ),
+            simple_button(
+              "Work",
+              PlayerWork,
+              check.check_work(state.p) |> option.is_some,
+            ),
+          )
+          |> list.append(view_actions(state)),
       ),
     ]),
   ]
@@ -210,6 +221,12 @@ fn simple_button(t: String, msg: Msg, is_disabled: Bool) -> Element(Msg) {
       html.span([attribute.class("text-sm")], [html.text(t)]),
     ],
   )
+}
+
+fn view_actions(state: State) -> List(Element(Msg)) {
+  let actions = action.get_action_by_location(state.p.location)
+
+  todo
 }
 
 fn modal(

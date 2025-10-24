@@ -9,6 +9,8 @@ pub fn location(id: LocationId) -> String {
     world.BusStop -> "Bus-Stop"
     world.Neighbor -> "Neighbor"
     world.SlingerCorner -> "Slinger Corner"
+    world.CityCenter -> "City Center"
+    world.Gym -> "Gym"
   }
 }
 
