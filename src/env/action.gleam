@@ -67,7 +67,7 @@ fn apply_cost(p: Player, requirements: List(ActionActivationCost)) -> Player {
   list.fold(requirements, p, fn(p, req) {
     case req {
       Money(cost:) -> Player(..p, money: p.money |> state.add_money(-cost))
-      _ -> p
+      Energy(cost:) -> Player(..p, energy: p.energy |> state.add_energy(-cost))
     }
   })
 }

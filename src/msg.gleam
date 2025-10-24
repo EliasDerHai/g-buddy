@@ -1,11 +1,11 @@
-import env/action.{type ActionId}
+import env/action.{type Action, type ActionId}
 import env/world.{type LocationId}
 
 pub type Msg {
   PlayerMove(LocationId)
   PlayerWork
   PlayerFightMove(FightMove)
-  PlayerAction(ActionId)
+  PlayerAction(Action)
 }
 
 pub type FightMove {

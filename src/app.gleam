@@ -1,6 +1,6 @@
 // IMPORTS ---------------------------------------------------------------------
 
-import env/action.{type ActionId}
+import env/action.{type Action, type ActionId}
 import env/fight
 import env/job
 import gleam/list
@@ -29,7 +29,7 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.PlayerMove(location) -> set_p(state, Player(..p, location:)) |> no_eff
     msg.PlayerWork -> handle_work(p) |> no_eff
     msg.PlayerFightMove(move) -> handle_fight_move(state, move)
-    msg.PlayerAction(action_id) -> handle_action(state, action_id) |> no_eff
+    msg.PlayerAction(action) -> handle_action(state, action) |> no_eff
   }
 }
 
@@ -65,8 +65,10 @@ fn handle_work(p: Player) -> State {
   State(fight:, p:)
 }
 
-fn handle_action(state: State, action_id: ActionId) -> State {
-  todo
+fn handle_action(state: State, action: Action) -> State {
+  let assert [] = check.check_action_costs(state.p, action.costs)
+    as "Illegal state - action should be disabled"
+  action.apply_action(state, action)
 }
 
 // util ----------------------------------------

@@ -198,6 +198,20 @@ fn view_fight(p: Player, fight: Fight) -> List(Element(Msg)) {
   ]
 }
 
+fn view_actions(state: State) -> List(Element(Msg)) {
+  action.get_action_by_location(state.p.location)
+  |> list.map(fn(a) {
+    simple_button(
+      a.id |> texts.action,
+      PlayerAction(a),
+      state.p
+        |> check.check_action_costs(a.costs)
+        |> list.is_empty
+        |> bool.negate,
+    )
+  })
+}
+
 // utils ----------------------------------------
 
 fn simple_text(t: String) -> Element(a) {
@@ -221,12 +235,6 @@ fn simple_button(t: String, msg: Msg, is_disabled: Bool) -> Element(Msg) {
       html.span([attribute.class("text-sm")], [html.text(t)]),
     ],
   )
-}
-
-fn view_actions(state: State) -> List(Element(Msg)) {
-  let actions = action.get_action_by_location(state.p.location)
-
-  todo
 }
 
 fn modal(

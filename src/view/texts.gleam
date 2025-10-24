@@ -1,3 +1,4 @@
+import env/action
 import env/enemy
 import env/world.{type LocationId}
 import state/state
@@ -32,5 +33,15 @@ pub fn enemy(id: enemy.EnemyId) -> String {
   case id {
     enemy.Lvl1 -> "Drunkard"
     enemy.Lvl2 -> "Goon"
+  }
+}
+
+pub fn action(id: action.ActionId) {
+  case id {
+    action.BusTo(dest) ->
+      "Bus to "
+      <> dest
+      |> location
+    action.Workout -> "Workout"
   }
 }
