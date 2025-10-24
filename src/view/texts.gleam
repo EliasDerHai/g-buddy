@@ -1,6 +1,8 @@
 import env/action
 import env/enemy
 import env/world.{type LocationId}
+import gleam/int
+import state/check
 import state/state
 
 pub fn location(id: LocationId) -> String {
@@ -44,5 +46,14 @@ pub fn action(id: action.ActionId) {
       |> location
     action.Workout -> "Workout"
     action.Sleep -> "End day"
+  }
+}
+
+pub fn disabled_reason(id: check.DeniedReason) -> String {
+  case id {
+    check.Insufficient(action.Energy(cost:)) ->
+      "Not enough energy (requires " <> cost |> int.to_string <> ")"
+    check.Insufficient(action.Money(cost:)) ->
+      "Not enough money (price $" <> cost |> int.to_string <> ")"
   }
 }

@@ -1,7 +1,6 @@
 import env/action
 import env/job
 import env/world.{type LocationId}
-import gleam/bool
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
@@ -101,7 +100,7 @@ fn view_navigation_buttons(state: State) -> List(Element(Msg)) {
             generic_view.simple_button(
               "Work",
               PlayerWork,
-              check.check_work(state.p) |> option.is_some,
+              check.check_work(state.p) |> option.map(texts.disabled_reason),
             ),
           )
           |> list.append(view_actions(state)),
@@ -200,11 +199,11 @@ fn view_fight(p: Player, fight: Fight) -> List(Element(Msg)) {
     // Actions
     html.div([attribute.class("flex gap-4 justify-center")], case fight.phase {
       PlayerTurn -> [
-        generic_view.simple_button("Attack", PlayerFightMove(Attack), False),
-        generic_view.simple_button("Flee", PlayerFightMove(Flee), False),
+        generic_view.simple_button("Attack", PlayerFightMove(Attack), None),
+        generic_view.simple_button("Flee", PlayerFightMove(Flee), None),
       ]
       PlayerWon | EnemyWon | PlayerFled -> [
-        generic_view.simple_button("Close", PlayerFightMove(End), False),
+        generic_view.simple_button("Close", PlayerFightMove(End), None),
       ]
       EnemyTurn ->
         panic as "Illegal state - EnemyTurn has to be processed before view"
@@ -220,8 +219,9 @@ fn view_actions(state: State) -> List(Element(Msg)) {
       PlayerAction(a),
       state.p
         |> check.check_action_costs(a.costs)
-        |> list.is_empty
-        |> bool.negate,
+        |> list.first
+        |> option.from_result
+        |> option.map(texts.disabled_reason),
     )
   })
 }

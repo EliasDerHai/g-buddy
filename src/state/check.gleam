@@ -10,7 +10,7 @@ pub type DeniedReason {
 
 pub fn check_work(p: Player) -> Option(DeniedReason) {
   let energy_cost = { p.job |> job.job_stats }.energy_cost
-  case p.energy.v >= energy_cost {
+  case p.energy.v <= energy_cost {
     False -> None
     True -> Some(Insufficient(action.Energy(energy_cost)))
   }

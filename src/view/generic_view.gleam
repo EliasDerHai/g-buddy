@@ -12,21 +12,34 @@ pub fn simple_text(t: String) -> Element(a) {
   html.span([], [html.text(t)])
 }
 
-pub fn simple_button(t: String, msg: Msg, is_disabled: Bool) -> Element(Msg) {
+pub fn simple_button(
+  t: String,
+  msg: Msg,
+  disabled_reason: Option(String),
+) -> Element(Msg) {
   let base_classes = "px-6 py-3 rounded-lg font-medium transition-colors"
+  let is_disabled = disabled_reason |> option.is_some
   let state_classes = case is_disabled {
     True -> "bg-gray-700 text-gray-500 cursor-not-allowed"
     False -> "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
   }
 
-  html.button(
+  html.span(
+    case disabled_reason {
+      None -> []
+      Some(disabled_reason) -> [attribute.title(disabled_reason)]
+    },
     [
-      attribute.class(base_classes <> " " <> state_classes),
-      attribute.disabled(is_disabled),
-      event.on_click(msg),
-    ],
-    [
-      html.span([attribute.class("text-sm")], [html.text(t)]),
+      html.button(
+        [
+          attribute.class(base_classes <> " " <> state_classes),
+          attribute.disabled(is_disabled),
+          event.on_click(msg),
+        ],
+        [
+          html.span([attribute.class("text-sm")], [html.text(t)]),
+        ],
+      ),
     ],
   )
 }
