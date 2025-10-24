@@ -3,10 +3,14 @@
 import env/action.{type Action}
 import env/fight
 import env/job
+import env/world
 import gleam/option.{Some}
+import gleam/string
 import lustre
 import lustre/effect.{type Effect}
-import msg.{type FightMove, type Msg}
+import msg.{type FightMove, type KeyboardEvent, type Msg}
+import plinth/browser/document
+import plinth/browser/event
 import state/check
 import state/state.{type Player, type State, Player, State}
 import view/view
@@ -14,21 +18,47 @@ import view/view
 // MAIN ------------------------------------------------------------------------
 
 pub fn main() {
-  let init = fn(_) { #(state.init(), effect.none()) }
+  let init = fn(_) { #(state.init(), setup_keyboard_listener()) }
   let app = lustre.application(init, update, view.view)
   let assert Ok(_) = lustre.start(app, "#app", Nil)
   Nil
 }
 
+fn setup_keyboard_listener() -> Effect(Msg) {
+  effect.from(fn(dispatch) {
+    document.add_event_listener("keydown", fn(raw_event) {
+      dispatch(msg.KeyDown(raw_event))
+    })
+  })
+}
+
 // UPDATE ----------------------------------------------------------------------
 
 fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
-  let p = state.p
   case msg {
-    msg.PlayerMove(location) -> set_p(state, Player(..p, location:)) |> no_eff
-    msg.PlayerWork -> handle_work(p) |> no_eff
+    msg.PlayerMove(location) -> handle_move(state, location) |> no_eff
+    msg.PlayerWork -> handle_work(state.p) |> no_eff
     msg.PlayerFightMove(move) -> handle_fight_move(state, move) |> no_eff
     msg.PlayerAction(action) -> handle_action(state, action) |> no_eff
+    msg.KeyDown(key) -> handle_keyboard(state, key) |> no_eff
+    msg.Noop -> state |> no_eff
+  }
+}
+
+fn handle_move(state: State, location: world.LocationId) -> State {
+  set_p(state, Player(..state.p, location:))
+}
+
+fn handle_keyboard(state: State, ev: KeyboardEvent) -> State {
+  let location = world.get_location(state.p.location)
+  let #(n, e, s, w) = location.connections
+
+  case ev |> event.key |> string.lowercase {
+    "w" if n != world.NoLocation -> handle_move(state, n)
+    "d" if e != world.NoLocation -> handle_move(state, e)
+    "s" if s != world.NoLocation -> handle_move(state, s)
+    "a" if w != world.NoLocation -> handle_move(state, w)
+    _ -> state
   }
 }
 
