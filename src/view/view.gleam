@@ -4,7 +4,7 @@ import env/world.{type LocationId}
 import gleam/bool
 import gleam/int
 import gleam/list
-import gleam/option.{type Option, None, Some}
+import gleam/option.{None, Some}
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
@@ -19,7 +19,7 @@ import state/state.{
   PlayerTurn, PlayerWon,
 }
 import util/list_extension
-import view/icons
+import view/generic_view
 import view/texts
 
 pub fn view(model: State) -> Element(Msg) {
@@ -28,23 +28,28 @@ pub fn view(model: State) -> Element(Msg) {
   html.div([], [
     html.div([attribute.class("flex h-screen w-screen")], [
       html.div(sidebar_attrs, [
-        { "Health: " <> model.p.health.v |> int.to_string } |> simple_text,
-        { "Energy: " <> model.p.energy.v |> int.to_string } |> simple_text,
-        { "Job: " <> model.p.job |> texts.job } |> simple_text,
+        { "Health: " <> model.p.health.v |> int.to_string }
+          |> generic_view.simple_text,
+        { "Energy: " <> model.p.energy.v |> int.to_string }
+          |> generic_view.simple_text,
+        { "Job: " <> model.p.job |> texts.job } |> generic_view.simple_text,
       ]),
       html.div([attribute.class("flex-1")], view_navigation_buttons(model)),
       html.div(sidebar_attrs, [
-        { "Day: " <> model.p.day_count |> int.to_string } |> simple_text,
-        { "Cash: $" <> model.p.money.v |> int.to_string } |> simple_text,
-        { "Weapon: " <> model.p.weapon |> texts.weapon } |> simple_text,
+        { "Day: " <> model.p.day_count |> int.to_string }
+          |> generic_view.simple_text,
+        { "Cash: $" <> model.p.money.v |> int.to_string }
+          |> generic_view.simple_text,
+        { "Weapon: " <> model.p.weapon |> texts.weapon }
+          |> generic_view.simple_text,
         { "Strength: " <> model.p.skills.strength |> int.to_string }
-          |> simple_text,
+          |> generic_view.simple_text,
         { "Dexterity: " <> model.p.skills.dexterity |> int.to_string }
-          |> simple_text,
+          |> generic_view.simple_text,
         { "Intelligence: " <> model.p.skills.intelligence |> int.to_string }
-          |> simple_text,
+          |> generic_view.simple_text,
         { "Charm: " <> model.p.skills.charm |> int.to_string }
-          |> simple_text,
+          |> generic_view.simple_text,
       ]),
     ]),
     {
@@ -53,7 +58,7 @@ pub fn view(model: State) -> Element(Msg) {
         None -> []
         Some(fight) -> view_fight(model.p, fight)
       }
-      modal(is_open, None, content)
+      generic_view.modal(is_open, None, content)
     },
   ])
 }
@@ -93,7 +98,7 @@ fn view_navigation_buttons(state: State) -> List(Element(Msg)) {
         []
           |> list_extension.append_when(
             { state.p.job |> job.job_stats }.workplace == state.p.location,
-            simple_button(
+            generic_view.simple_button(
               "Work",
               PlayerWork,
               check.check_work(state.p) |> option.is_some,
@@ -195,11 +200,11 @@ fn view_fight(p: Player, fight: Fight) -> List(Element(Msg)) {
     // Actions
     html.div([attribute.class("flex gap-4 justify-center")], case fight.phase {
       PlayerTurn -> [
-        simple_button("Attack", PlayerFightMove(Attack), False),
-        simple_button("Flee", PlayerFightMove(Flee), False),
+        generic_view.simple_button("Attack", PlayerFightMove(Attack), False),
+        generic_view.simple_button("Flee", PlayerFightMove(Flee), False),
       ]
       PlayerWon | EnemyWon | PlayerFled -> [
-        simple_button("Close", PlayerFightMove(End), False),
+        generic_view.simple_button("Close", PlayerFightMove(End), False),
       ]
       EnemyTurn ->
         panic as "Illegal state - EnemyTurn has to be processed before view"
@@ -210,7 +215,7 @@ fn view_fight(p: Player, fight: Fight) -> List(Element(Msg)) {
 fn view_actions(state: State) -> List(Element(Msg)) {
   action.get_action_by_location(state.p.location)
   |> list.map(fn(a) {
-    simple_button(
+    generic_view.simple_button(
       a.id |> texts.action,
       PlayerAction(a),
       state.p
@@ -219,88 +224,4 @@ fn view_actions(state: State) -> List(Element(Msg)) {
         |> bool.negate,
     )
   })
-}
-
-// utils ----------------------------------------
-
-fn simple_text(t: String) -> Element(a) {
-  html.span([], [html.text(t)])
-}
-
-fn simple_button(t: String, msg: Msg, is_disabled: Bool) -> Element(Msg) {
-  let base_classes = "px-6 py-3 rounded-lg font-medium transition-colors"
-  let state_classes = case is_disabled {
-    True -> "bg-gray-700 text-gray-500 cursor-not-allowed"
-    False -> "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
-  }
-
-  html.button(
-    [
-      attribute.class(base_classes <> " " <> state_classes),
-      attribute.disabled(is_disabled),
-      event.on_click(msg),
-    ],
-    [
-      html.span([attribute.class("text-sm")], [html.text(t)]),
-    ],
-  )
-}
-
-fn modal(
-  is_open: Bool,
-  closeable: Option(Msg),
-  content: List(Element(Msg)),
-) -> Element(Msg) {
-  use <- bool.guard(!is_open, html.div([], []))
-
-  html.div([], [
-    // Backdrop
-    case closeable {
-      Some(effect) ->
-        html.div(
-          [
-            attribute.class("fixed inset-0 bg-black/50 z-1"),
-            event.on_click(effect),
-          ],
-          [],
-        )
-      None -> html.div([], [])
-    },
-    // Modal
-    html.div(
-      [
-        attribute.class(
-          "fixed inset-0 grid place-items-center z-2 pointer-events-none",
-        ),
-      ],
-      [
-        html.div(
-          [
-            attribute.class(
-              "pointer-events-auto bg-neutral-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 relative",
-            ),
-          ],
-          list.flatten([
-            // Close button
-            case closeable {
-              Some(effect) -> [
-                html.button(
-                  [
-                    attribute.class(
-                      "cursor-pointer absolute top-4 right-4 text-gray-400 hover:text-white transition-colors",
-                    ),
-                    event.on_click(effect),
-                  ],
-                  [icons.x([])],
-                ),
-              ]
-              None -> []
-            },
-            // Modal content
-            [html.div([attribute.class("p-8")], content)],
-          ]),
-        ),
-      ],
-    ),
-  ])
 }
