@@ -44,6 +44,70 @@ pub fn simple_button(
   )
 }
 
+pub fn simple_warn_button(
+  t: String,
+  msg: Msg,
+  disabled_reason: Option(String),
+) -> Element(Msg) {
+  let base_classes = "px-6 py-3 rounded-lg font-medium transition-colors"
+  let is_disabled = disabled_reason |> option.is_some
+  let state_classes = case is_disabled {
+    True -> "bg-gray-700 text-gray-500 cursor-not-allowed"
+    False -> "bg-red-400 text-white hover:bg-blue-700 cursor-pointer"
+  }
+
+  html.span(
+    case disabled_reason {
+      None -> []
+      Some(disabled_reason) -> [attribute.title(disabled_reason)]
+    },
+    [
+      html.button(
+        [
+          attribute.class(base_classes <> " " <> state_classes),
+          attribute.disabled(is_disabled),
+          event.on_click(msg),
+        ],
+        [
+          html.span([attribute.class("text-sm")], [html.text(t)]),
+        ],
+      ),
+    ],
+  )
+}
+
+pub fn toggle_button(active: Bool, on_toggle: Msg) -> Element(Msg) {
+  let toggle_bg = case active {
+    True -> "bg-blue-600"
+    False -> "bg-gray-600"
+  }
+
+  let toggle_position = case active {
+    True -> "translate-x-5"
+    False -> "translate-x-0"
+  }
+  html.button(
+    [
+      attribute.class(
+        "relative inline-flex h-6 w-11 items-center rounded-full transition-colors "
+        <> toggle_bg,
+      ),
+      event.on_click(on_toggle),
+    ],
+    [
+      html.span(
+        [
+          attribute.class(
+            "inline-block h-4 w-4 transform rounded-full bg-white transition-transform "
+            <> toggle_position,
+          ),
+        ],
+        [],
+      ),
+    ],
+  )
+}
+
 pub fn modal(
   is_open: Bool,
   closeable: Option(Msg),
