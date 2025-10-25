@@ -8,52 +8,49 @@ import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
-import msg.{
-  type Msg, Attack, End, Flee, PlayerAction, PlayerFightMove, PlayerMove,
-  PlayerWork,
-}
+import msg.{type Msg, PlayerAction, PlayerMove, PlayerWork}
 import state/check
-import state/state.{
-  type Fight, type Player, type State, EnemyTurn, EnemyWon, PlayerFled,
-  PlayerTurn, PlayerWon,
-}
+import state/state.{type State}
 import util/list_extension
+import view/fight_view
 import view/generic_view
+import view/setting_view
 import view/texts
 
-pub fn view(model: State) -> Element(Msg) {
-  html.div([], [
+pub fn view(s: State) -> Element(Msg) {
+  [
     html.div([attribute.class("flex h-screen w-screen")], [
       html.div(
         [attribute.class("bg-neutral-900 w-64 flex flex-col p-8")],
-        view_left_hud(model),
+        view_left_hud(s),
       ),
-      html.div([attribute.class("flex-1")], view_navigation_buttons(model)),
+      html.div([attribute.class("flex-1")], view_navigation_buttons(s)),
       html.div(
         [
           attribute.class(
             "bg-neutral-900 w-64 flex flex-col p-8 justify-between",
           ),
         ],
-        view_right_hud(model),
+        view_right_hud(s),
       ),
     ]),
     {
-      let is_open = model.fight |> option.is_some
-      let content = case model.fight {
+      let is_open = s.fight |> option.is_some
+      let content = case s.fight {
         None -> []
-        Some(fight) -> view_fight(model.p, fight)
+        Some(fight) -> fight_view.view_fight(s.p, fight)
       }
       generic_view.modal(is_open, None, content)
     },
     {
-      let #(is_open, content) = case model.settings.display {
+      let #(is_open, content) = case s.settings.display {
         state.Hidden -> #(False, [])
-        state.SaveLoad -> #(True, [generic_view.simple_text("...")])
+        state.SaveLoad -> #(True, setting_view.view_settings(s))
       }
       generic_view.modal(is_open, Some(msg.SettingToggle), content)
     },
-  ])
+  ]
+  |> html.div([], _)
 }
 
 fn view_left_hud(model: State) -> List(Element(Msg)) {
@@ -158,85 +155,6 @@ fn navigation_button(location_id: LocationId, direction: String) -> Element(Msg)
       html.i([], [html.text(label)]),
     ],
   )
-}
-
-fn view_fight(p: Player, fight: Fight) -> List(Element(Msg)) {
-  [
-    html.h2([attribute.class("text-2xl font-bold mb-4")], [
-      html.text("Fight!"),
-    ]),
-    // Stats
-    html.div([attribute.class("flex justify-between mb-6")], [
-      html.div(
-        [],
-        [
-          html.p([attribute.class("font-bold")], [html.text("You")]),
-          html.p([], [
-            html.text(
-              "HP: "
-              <> int.to_string(p.health.v)
-              <> "/"
-              <> int.to_string(p.health.max),
-            ),
-          ]),
-        ]
-          |> list_extension.append_when(
-            fight.last_player_dmg |> option.is_some(),
-            html.p([attribute.class("text-red-100")], [
-              html.text(
-                "Dmg dealt: "
-                <> fight.last_player_dmg |> option.unwrap(0) |> int.to_string,
-              ),
-            ]),
-          ),
-      ),
-      html.div(
-        [],
-        [
-          html.p([attribute.class("font-bold")], [
-            html.text(texts.enemy(fight.enemy.id)),
-          ]),
-          html.p([], [html.text("HP: " <> int.to_string(fight.enemy.health))]),
-        ]
-          |> list_extension.append_when(
-            fight.last_enemy_dmg |> option.is_some(),
-            html.p([attribute.class("text-red-100")], [
-              html.text(
-                "Dmg dealt: "
-                <> fight.last_enemy_dmg |> option.unwrap(0) |> int.to_string,
-              ),
-            ]),
-          ),
-      ),
-    ]),
-    // Phase display
-    html.div([attribute.class("mb-6 text-center")], [
-      case fight.phase {
-        PlayerTurn ->
-          html.p([attribute.class("text-blue-400")], [html.text("Your turn")])
-        EnemyTurn ->
-          html.p([attribute.class("text-red-400")], [html.text("Enemy turn")])
-        PlayerWon ->
-          html.p([attribute.class("text-green-400")], [html.text("Victory!")])
-        EnemyWon ->
-          html.p([attribute.class("text-red-400")], [html.text("Defeated!")])
-        PlayerFled ->
-          html.p([attribute.class("text-yellow-400")], [html.text("Fled!")])
-      },
-    ]),
-    // Actions
-    html.div([attribute.class("flex gap-4 justify-center")], case fight.phase {
-      PlayerTurn -> [
-        generic_view.simple_button("Attack", PlayerFightMove(Attack), None),
-        generic_view.simple_button("Flee", PlayerFightMove(Flee), None),
-      ]
-      PlayerWon | EnemyWon | PlayerFled -> [
-        generic_view.simple_button("Close", PlayerFightMove(End), None),
-      ]
-      EnemyTurn ->
-        panic as "Illegal state - EnemyTurn has to be processed before view"
-    }),
-  ]
 }
 
 fn view_actions(state: State) -> List(Element(Msg)) {
