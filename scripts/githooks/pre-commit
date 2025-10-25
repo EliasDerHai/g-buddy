@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -e
+
+# working dir independent
+cd "$(git rev-parse --show-toplevel)"
+
+echo "Running pre-commit hook: Executing tests..."
+./scripts/test.sh

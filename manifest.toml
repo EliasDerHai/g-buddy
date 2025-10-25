@@ -56,3 +56,4 @@ lucide_lustre = { git = "https://github.com/EliasDerHai/lucide_lustre.git", ref 
 lustre = { version = ">= 5.3.5 and < 6.0.0" }
 lustre_dev_tools = { version = ">= 2.1.3 and < 3.0.0" }
 plinth = { version = ">= 0.7.2 and < 1.0.0" }
+gleam_json = { version = ">= 3.0.2 and < 4.0.0" }

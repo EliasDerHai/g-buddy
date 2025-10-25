@@ -3,7 +3,7 @@
 import env/action.{type Action}
 import env/fight
 import env/job
-import env/world
+import env/world.{type LocationId}
 import gleam/option.{Some}
 import gleam/string
 import lustre
@@ -45,7 +45,7 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
   }
 }
 
-fn handle_move(state: State, location: world.LocationId) -> State {
+fn handle_move(state: State, location: LocationId) -> State {
   set_p(state, Player(..state.p, location:))
 }
 
