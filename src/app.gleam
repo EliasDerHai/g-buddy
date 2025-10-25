@@ -3,18 +3,23 @@ import env/fight
 import env/job
 import env/world.{type LocationId}
 import gleam/bool
+import gleam/list
 import gleam/option.{None, Some}
 import gleam/pair
 import gleam/string
 import lustre
 import lustre/effect.{type Effect}
-import msg.{type FightMove, type KeyboardEvent, type Msg, type SettingMsg}
+import msg.{
+  type FightMove, type KeyboardEvent, type Msg, type SettingMsg, type ToastMsg,
+}
 import plinth/browser/document
 import plinth/browser/event
 import state/check
 import state/init
 import state/state.{type Player, type State, Player, State}
+import state/toast
 import util/localstore
+import util/time
 import view/view
 
 // MAIN ------------------------------------------------------------------------
@@ -59,6 +64,7 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.KeyDown(key) -> handle_keyboard(state, key)
     msg.Noop -> state |> no_eff
     msg.SettingChange(msg) -> handle_setting_toggle(state, msg)
+    msg.ToastChange(msg) -> handle_toast(state, msg)
   }
   |> pair.map_first(fn(state) {
     case msg != msg.Noop && state.settings.autosave {
@@ -123,7 +129,7 @@ fn handle_action(state: State, action: Action) -> #(State, Effect(a)) {
   action.apply_action(state, action) |> no_eff
 }
 
-fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(a)) {
+fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(Msg)) {
   let state.Settings(display:, autosave:, autoload:) = state.settings
 
   let settings = case msg {
@@ -131,7 +137,6 @@ fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(a)) {
       let _ = localstore.reset()
       state.settings
     }
-
     msg.SettingToggleAutoload ->
       state.Settings(..state.settings, autoload: autoload |> bool.negate)
     msg.SettingToggleAutosave ->
@@ -143,29 +148,40 @@ fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(a)) {
       })
   }
 
-  State(..state, settings:) |> no_eff
+  case msg {
+    msg.SettingReset -> #(
+      State(..state, settings:),
+      effect.from(fn(dispatch) {
+        msg.ToastChange(msg.ToastAdd(toast.create_info_toast("Storage reset")))
+        |> dispatch
+        Nil
+      }),
+    )
+    _ -> State(..state, settings:) |> no_eff
+  }
 }
 
-fn handle_toast(state: State) -> #(State, Effect(Msg)) {
-  todo
-  //  pub fn show_toast(state: State, toast_msg: Toast) -> #(State, Effect(Msg)) {
-  //    let new_toasts = toast.add_toast(state.toasts, toast_msg)
-  //    let new_global_state = GlobalState(new_toasts)
-  //    let timeout_effect =
-  //      effect.from(fn(dispatch) {
-  //        time.set_timeout(
-  //          fn() { dispatch(RemoveToast(toast_msg.id)) },
-  //          toast_msg.duration,
-  //        )
-  //      })
-  //    #(Model(model.app_state, new_global_state), timeout_effect)
-  //  }
-  //  
-  //  pub fn remove_toast(model: Model, toast_id: Int) -> #(Model, Effect(Msg)) {
-  //    let new_toasts = toast.remove_toast_by_id(model.global_state.toasts, toast_id)
-  //    let new_global_state = GlobalState(new_toasts)
-  //    #(Model(model.app_state, new_global_state), effect.none())
-  //  }
+fn handle_toast(state: State, msg: ToastMsg) -> #(State, Effect(Msg)) {
+  case msg {
+    msg.ToastAdd(t) -> {
+      let timeout_effect =
+        effect.from(fn(dispatch) {
+          time.set_timeout(
+            fn() { dispatch(msg.ToastChange(msg.ToastRemove(t.id))) },
+            t.duration,
+          )
+          Nil
+        })
+
+      #(State(..state, toasts: [t, ..state.toasts]), timeout_effect)
+    }
+    msg.ToastRemove(id:) ->
+      State(
+        ..state,
+        toasts: state.toasts |> list.filter(fn(el) { el.id != id }),
+      )
+      |> no_eff
+  }
 }
 
 // util ----------------------------------------

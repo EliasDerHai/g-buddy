@@ -89,16 +89,6 @@ pub fn create_error_toast(content: String) -> Toast {
   )
 }
 
-// UPDATE -----------------------------------------------------------
-
-pub fn add_toast(toasts: List(Toast), toast: Toast) -> List(Toast) {
-  [toast, ..toasts]
-}
-
-pub fn remove_toast_by_id(toasts: List(Toast), toast_id: Int) -> List(Toast) {
-  list.filter(toasts, fn(toast) { toast.id != toast_id })
-}
-
 // VIEW -----------------------------------------------------------
 
 pub fn view_toasts(toasts: List(Toast)) -> Element(msg) {
@@ -114,9 +104,9 @@ pub fn view_toasts(toasts: List(Toast)) -> Element(msg) {
 
 fn view_single_toast(toast: Toast) -> Element(msg) {
   let style_classes = case toast.toast_style {
-    Info -> "bg-blue-50 border-blue-200 text-blue-500"
-    Warning -> "bg-yellow-50 border-yellow-200 text-yellow-500"
-    Failure -> "bg-red-50 border-red-200 text-red-500"
+    Info -> "bg-neutral-800 border-blue-500 text-blue-400"
+    Warning -> "bg-neutral-800 border-yellow-500 text-yellow-400"
+    Failure -> "bg-neutral-800 border-red-500 text-red-400"
   }
 
   html.div(

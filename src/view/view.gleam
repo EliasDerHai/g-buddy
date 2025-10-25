@@ -11,6 +11,7 @@ import lustre/event
 import msg.{type Msg, PlayerAction, PlayerMove, PlayerWork}
 import state/check
 import state/state.{type State}
+import state/toast
 import util/list_extension
 import view/fight_view
 import view/generic_view
@@ -18,7 +19,7 @@ import view/setting_view
 import view/texts
 
 pub fn view(s: State) -> Element(Msg) {
-  [
+  html.div([], [
     html.div([attribute.class("flex h-screen w-screen")], [
       html.div(
         [attribute.class("bg-neutral-900 w-64 flex flex-col p-8")],
@@ -53,8 +54,8 @@ pub fn view(s: State) -> Element(Msg) {
         content,
       )
     },
-  ]
-  |> html.div([], _)
+    toast.view_toasts(s.toasts),
+  ])
 }
 
 fn view_left_hud(model: State) -> List(Element(Msg)) {
