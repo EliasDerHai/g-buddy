@@ -4,17 +4,19 @@ import gleam/json.{type Json}
 import gleam/option.{None, Some}
 import state/state.{
   type Energy, type Fight, type Health, type JobId, type Money, type Phase,
-  type Player, type Skills, type State, type WeaponId,
+  type Player, type SettingDisplay, type Settings, type Skills, type State,
+  type WeaponId,
 }
 
 pub fn state_to_json(state: State) -> Json {
-  let state.State(p:, fight:) = state
+  let state.State(p:, fight:, settings:) = state
   json.object([
     #("p", player_to_json(p)),
     #("fight", case fight {
       None -> json.null()
       Some(value) -> fight_to_json(value)
     }),
+    #("settings", settings_to_json(settings)),
   ])
 }
 
@@ -141,5 +143,21 @@ pub fn enemy_id_to_json(id: EnemyId) -> Json {
   case id {
     enemy.Lvl1 -> json.string("Lvl1")
     enemy.Lvl2 -> json.string("Lvl2")
+  }
+}
+
+pub fn settings_to_json(settings: Settings) -> Json {
+  let state.Settings(display:, autosave:, autoload:) = settings
+  json.object([
+    #("display", setting_display_to_json(display)),
+    #("autosave", json.bool(autosave)),
+    #("autoload", json.bool(autoload)),
+  ])
+}
+
+pub fn setting_display_to_json(display: SettingDisplay) -> Json {
+  case display {
+    state.Hidden -> json.string("Hidden")
+    state.SaveLoad -> json.string("SaveLoad")
   }
 }

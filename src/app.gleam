@@ -1,7 +1,6 @@
 // IMPORTS ---------------------------------------------------------------------
 
 import env/action.{type Action}
-import env/enemy
 import env/fight
 import env/job
 import env/world.{type LocationId}
@@ -13,8 +12,9 @@ import msg.{type FightMove, type KeyboardEvent, type Msg}
 import plinth/browser/document
 import plinth/browser/event
 import state/check
-import state/localstore
+import state/init
 import state/state.{type Player, type State, Player, State}
+import util/localstore
 import view/view
 
 // MAIN ------------------------------------------------------------------------
@@ -26,50 +26,12 @@ pub fn main() {
   Nil
 }
 
-pub fn init() -> State {
+fn init() -> State {
   case localstore.try_load() {
-    None -> new_player()
+    None -> init.new_player()
+    // None -> new_player_fight()
     Some(last) -> last
   }
-}
-
-pub fn new_player() {
-  State(
-    Player(
-      state.Money(state.start_money),
-      state.Health(state.start_health, state.max_health),
-      state.Energy(state.start_energy, state.max_energy),
-      state.NoWeapon,
-      world.Apartment,
-      state.Lookout,
-      0,
-      state.Skills(0, 0, 0, 0),
-    ),
-    None,
-  )
-}
-
-// for debugging
-pub fn new_player_fight() {
-  State(
-    Player(
-      state.Money(state.start_money),
-      state.Health(state.start_health, state.max_health),
-      state.Energy(state.start_energy, state.max_energy),
-      state.NoWeapon,
-      world.Apartment,
-      state.Lookout,
-      0,
-      state.Skills(0, 0, 0, 0),
-    ),
-    option.Some(state.Fight(
-      state.PlayerTurn,
-      enemy.Lvl1 |> enemy.get_enemy,
-      False,
-      None,
-      None,
-    )),
-  )
 }
 
 fn setup_keyboard_listener() -> Effect(Msg) {
@@ -85,7 +47,7 @@ fn setup_keyboard_listener() -> Effect(Msg) {
 fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
   case msg {
     msg.PlayerMove(location) -> handle_move(state, location)
-    msg.PlayerWork -> handle_work(state.p)
+    msg.PlayerWork -> handle_work(state)
     msg.PlayerFightMove(move) -> handle_fight_move(state, move)
     msg.PlayerAction(action) -> handle_action(state, action)
     msg.KeyDown(key) -> handle_keyboard(state, key)
@@ -113,19 +75,18 @@ fn handle_keyboard(state: State, ev: KeyboardEvent) -> State {
 }
 
 fn handle_fight_move(state: State, move: FightMove) -> State {
-  let assert Some(fight) = state.fight
-    as "Illegal state - fight move outside of fight"
-  let next_state = fight.player_turn(state.p, fight, move)
+  let next_state = fight.player_turn(state, move)
 
   // immediately do enemy-turn (if it's his turn)
   case next_state {
-    State(p, option.Some(fight)) if fight.phase == state.EnemyTurn ->
-      fight.enemy_turn(p, fight)
+    State(_, option.Some(fight), _) if fight.phase == state.EnemyTurn ->
+      fight.enemy_turn(state)
     s -> s
   }
 }
 
-fn handle_work(p: Player) -> State {
+fn handle_work(state: State) -> State {
+  let p = state.p
   let job_stats = p.job |> job.job_stats
   let energy =
     p.energy
@@ -140,7 +101,7 @@ fn handle_work(p: Player) -> State {
     |> job.roll_trouble_dice
     |> option.map(fn(e_id) { fight.start_fight(e_id, p) })
 
-  State(fight:, p:)
+  State(fight:, p:, settings: state.settings)
 }
 
 fn handle_action(state: State, action: Action) -> State {

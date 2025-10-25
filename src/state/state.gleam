@@ -4,7 +4,7 @@ import gleam/int
 import gleam/option.{type Option}
 
 pub type State {
-  State(p: Player, fight: Option(Fight))
+  State(p: Player, fight: Option(Fight), settings: Settings)
 }
 
 pub type Money {
@@ -71,6 +71,16 @@ pub type Phase {
   PlayerWon
   EnemyWon
   PlayerFled
+}
+
+// settings 
+pub type SettingDisplay {
+  Hidden
+  SaveLoad
+}
+
+pub type Settings {
+  Settings(display: SettingDisplay, autosave: Bool, autoload: Bool)
 }
 
 // INIT -------------------------------------------------

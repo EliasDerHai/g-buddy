@@ -3,13 +3,15 @@ import env/world.{type LocationId}
 import gleam/dynamic/decode.{type Decoder}
 import state/state.{
   type Energy, type Fight, type Health, type JobId, type Money, type Phase,
-  type Player, type Skills, type State, type WeaponId,
+  type Player, type SettingDisplay, type Settings, type Skills, type State,
+  type WeaponId,
 }
 
 pub fn state_decoder() -> Decoder(State) {
   use p <- decode.field("p", player_decoder())
   use fight <- decode.field("fight", decode.optional(fight_decoder()))
-  decode.success(state.State(p:, fight:))
+  use settings <- decode.field("settings", settings_decoder())
+  decode.success(state.State(p:, fight:, settings:))
 }
 
 pub fn player_decoder() -> Decoder(Player) {
@@ -139,5 +141,21 @@ pub fn enemy_id_decoder() -> Decoder(EnemyId) {
     "Lvl1" -> decode.success(enemy.Lvl1)
     "Lvl2" -> decode.success(enemy.Lvl2)
     _ -> decode.failure(enemy.Lvl1, "Invalid EnemyId: " <> str)
+  }
+}
+
+pub fn settings_decoder() -> Decoder(Settings) {
+  use display <- decode.field("display", setting_display_decoder())
+  use autosave <- decode.field("autosave", decode.bool)
+  use autoload <- decode.field("autoload", decode.bool)
+  decode.success(state.Settings(display:, autosave:, autoload:))
+}
+
+pub fn setting_display_decoder() -> Decoder(SettingDisplay) {
+  use str <- decode.then(decode.string)
+  case str {
+    "Hidden" -> decode.success(state.Hidden)
+    "SaveLoad" -> decode.success(state.SaveLoad)
+    _ -> decode.failure(state.Hidden, "Invalid SettingDisplay: " <> str)
   }
 }

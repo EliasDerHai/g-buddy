@@ -21,7 +21,11 @@ pub fn start_fight(enemy: EnemyId, p: Player) -> Fight {
   Fight(phase, enemy, False, None, None)
 }
 
-pub fn player_turn(p: Player, fight: Fight, move: FightMove) -> State {
+pub fn player_turn(state: State, move: FightMove) -> State {
+  let State(p:, fight:, settings:) = state
+  let assert Some(fight) = fight
+    as "Illegal state - fight move outside of fight"
+
   case move {
     msg.Attack -> {
       let assert state.PlayerTurn = fight.phase
@@ -41,18 +45,27 @@ pub fn player_turn(p: Player, fight: Fight, move: FightMove) -> State {
       State(
         p:,
         fight: Some(Fight(next_phase, enemy, False, Some(real_dmg), None)),
+        settings:,
       )
     }
     msg.Flee ->
-      State(p:, fight: Some(Fight(EnemyTurn, fight.enemy, True, None, None)))
+      State(
+        p:,
+        fight: Some(Fight(EnemyTurn, fight.enemy, True, None, None)),
+        settings:,
+      )
     msg.End -> {
       let assert True = fight.phase |> is_finite_phase as "Illegal state"
-      State(p:, fight: None)
+      State(p:, fight: None, settings:)
     }
   }
 }
 
-pub fn enemy_turn(p: Player, fight: Fight) -> State {
+pub fn enemy_turn(state: State) -> State {
+  let State(p:, fight:, settings:) = state
+  let assert Some(fight) = fight
+    as "Illegal state - fight move outside of fight"
+
   let enemy = fight.enemy
   let w_stats = p.weapon |> weapon.weapon_stats
   let real_dmg = dmg_calc(enemy.dmg, enemy.crit, w_stats.def)
@@ -69,6 +82,7 @@ pub fn enemy_turn(p: Player, fight: Fight) -> State {
     fight: Some(
       Fight(..fight, phase: next_phase, last_enemy_dmg: Some(real_dmg)),
     ),
+    settings:,
   )
 }
 
