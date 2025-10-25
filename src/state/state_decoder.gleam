@@ -11,7 +11,7 @@ pub fn state_decoder() -> Decoder(State) {
   use p <- decode.field("p", player_decoder())
   use fight <- decode.field("fight", decode.optional(fight_decoder()))
   use settings <- decode.field("settings", settings_decoder())
-  decode.success(state.State(p:, fight:, settings:))
+  decode.success(state.State(p:, fight:, settings:, toasts: []))
 }
 
 pub fn player_decoder() -> Decoder(Player) {

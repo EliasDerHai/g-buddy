@@ -20,6 +20,7 @@ pub fn new_state() {
     ),
     None,
     state.Settings(state.Hidden, True, True),
+    [],
   )
 }
 
@@ -38,5 +39,6 @@ pub fn new_state_fight() {
     ),
     Some(Fight(PlayerTurn, Lvl1 |> enemy.get_enemy, False, None, None)),
     state.Settings(state.Hidden, True, True),
+    [],
   )
 }

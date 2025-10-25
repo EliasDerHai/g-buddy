@@ -2,9 +2,15 @@ import env/enemy.{type Enemy}
 import env/world.{type LocationId}
 import gleam/int
 import gleam/option.{type Option}
+import state/toast.{type Toast}
 
 pub type State {
-  State(p: Player, fight: Option(Fight), settings: Settings)
+  State(
+    p: Player,
+    fight: Option(Fight),
+    settings: Settings,
+    toasts: List(Toast),
+  )
 }
 
 pub type Money {
