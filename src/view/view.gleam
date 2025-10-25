@@ -22,34 +22,21 @@ import view/generic_view
 import view/texts
 
 pub fn view(model: State) -> Element(Msg) {
-  let sidebar_attrs = [attribute.class("bg-neutral-900 w-64 flex flex-col p-8")]
-
   html.div([], [
     html.div([attribute.class("flex h-screen w-screen")], [
-      html.div(sidebar_attrs, [
-        { "Health: " <> model.p.health.v |> int.to_string }
-          |> generic_view.simple_text,
-        { "Energy: " <> model.p.energy.v |> int.to_string }
-          |> generic_view.simple_text,
-        { "Job: " <> model.p.job |> texts.job } |> generic_view.simple_text,
-      ]),
+      html.div(
+        [attribute.class("bg-neutral-900 w-64 flex flex-col p-8")],
+        view_left_hud(model),
+      ),
       html.div([attribute.class("flex-1")], view_navigation_buttons(model)),
-      html.div(sidebar_attrs, [
-        { "Day: " <> model.p.day_count |> int.to_string }
-          |> generic_view.simple_text,
-        { "Cash: $" <> model.p.money.v |> int.to_string }
-          |> generic_view.simple_text,
-        { "Weapon: " <> model.p.weapon |> texts.weapon }
-          |> generic_view.simple_text,
-        { "Strength: " <> model.p.skills.strength |> int.to_string }
-          |> generic_view.simple_text,
-        { "Dexterity: " <> model.p.skills.dexterity |> int.to_string }
-          |> generic_view.simple_text,
-        { "Intelligence: " <> model.p.skills.intelligence |> int.to_string }
-          |> generic_view.simple_text,
-        { "Charm: " <> model.p.skills.charm |> int.to_string }
-          |> generic_view.simple_text,
-      ]),
+      html.div(
+        [
+          attribute.class(
+            "bg-neutral-900 w-64 flex flex-col p-8 justify-between",
+          ),
+        ],
+        view_right_hud(model),
+      ),
     ]),
     {
       let is_open = model.fight |> option.is_some
@@ -59,7 +46,48 @@ pub fn view(model: State) -> Element(Msg) {
       }
       generic_view.modal(is_open, None, content)
     },
+    {
+      let #(is_open, content) = case model.settings.display {
+        state.Hidden -> #(False, [])
+        state.SaveLoad -> #(True, [generic_view.simple_text("...")])
+      }
+      generic_view.modal(is_open, Some(msg.SettingToggle), content)
+    },
   ])
+}
+
+fn view_left_hud(model: State) -> List(Element(Msg)) {
+  [
+    { "Health: " <> model.p.health.v |> int.to_string }
+      |> generic_view.simple_text,
+    { "Energy: " <> model.p.energy.v |> int.to_string }
+      |> generic_view.simple_text,
+    { "Job: " <> model.p.job |> texts.job } |> generic_view.simple_text,
+  ]
+}
+
+fn view_right_hud(model: State) -> List(Element(Msg)) {
+  [
+    html.div([attribute.class("flex flex-col")], [
+      { "Day: " <> model.p.day_count |> int.to_string }
+        |> generic_view.simple_text,
+      { "Cash: $" <> model.p.money.v |> int.to_string }
+        |> generic_view.simple_text,
+      { "Weapon: " <> model.p.weapon |> texts.weapon }
+        |> generic_view.simple_text,
+      { "Strength: " <> model.p.skills.strength |> int.to_string }
+        |> generic_view.simple_text,
+      { "Dexterity: " <> model.p.skills.dexterity |> int.to_string }
+        |> generic_view.simple_text,
+      { "Intelligence: " <> model.p.skills.intelligence |> int.to_string }
+        |> generic_view.simple_text,
+      { "Charm: " <> model.p.skills.charm |> int.to_string }
+        |> generic_view.simple_text,
+    ]),
+    html.div([], [
+      generic_view.simple_button("Settings", msg.SettingToggle, None),
+    ]),
+  ]
 }
 
 fn view_navigation_buttons(state: State) -> List(Element(Msg)) {

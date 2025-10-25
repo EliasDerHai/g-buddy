@@ -11,6 +11,7 @@ pub type Msg {
   PlayerFightMove(FightMove)
   PlayerAction(Action)
   KeyDown(event: KeyboardEvent)
+  SettingToggle
   Noop
 }
 

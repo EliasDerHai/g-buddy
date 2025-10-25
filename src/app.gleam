@@ -52,6 +52,7 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.PlayerAction(action) -> handle_action(state, action)
     msg.KeyDown(key) -> handle_keyboard(state, key)
     msg.Noop -> state
+    msg.SettingToggle -> handle_setting_toggle(state)
   }
   |> localstore.try_save
   |> no_eff
@@ -108,6 +109,15 @@ fn handle_action(state: State, action: Action) -> State {
   let assert [] = check.check_action_costs(state.p, action.costs)
     as "Illegal state - action should be disabled"
   action.apply_action(state, action)
+}
+
+fn handle_setting_toggle(state: State) -> State {
+  let display = case state.settings.display {
+    state.Hidden -> state.SaveLoad
+    state.SaveLoad -> state.Hidden
+  }
+
+  State(..state, settings: state.Settings(..state.settings, display:))
 }
 
 // util ----------------------------------------
