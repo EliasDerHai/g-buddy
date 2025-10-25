@@ -1,3 +1,4 @@
+import app
 import env/world
 import gleeunit
 import state/state
@@ -7,7 +8,7 @@ pub fn main() -> Nil {
 }
 
 pub fn init_test() {
-  let s = state.init()
+  let s = app.new_player()
 
   assert s.p.health.v == state.start_health
   assert s.p.money.v == state.start_money

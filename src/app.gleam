@@ -1,10 +1,11 @@
 // IMPORTS ---------------------------------------------------------------------
 
 import env/action.{type Action}
+import env/enemy
 import env/fight
 import env/job
 import env/world.{type LocationId}
-import gleam/option.{Some}
+import gleam/option.{None, Some}
 import gleam/string
 import lustre
 import lustre/effect.{type Effect}
@@ -12,16 +13,63 @@ import msg.{type FightMove, type KeyboardEvent, type Msg}
 import plinth/browser/document
 import plinth/browser/event
 import state/check
+import state/localstore
 import state/state.{type Player, type State, Player, State}
 import view/view
 
 // MAIN ------------------------------------------------------------------------
 
 pub fn main() {
-  let init = fn(_) { #(state.init(), setup_keyboard_listener()) }
+  let init = fn(_) { #(init(), setup_keyboard_listener()) }
   let app = lustre.application(init, update, view.view)
   let assert Ok(_) = lustre.start(app, "#app", Nil)
   Nil
+}
+
+pub fn init() -> State {
+  case localstore.try_load() {
+    None -> new_player()
+    Some(last) -> last
+  }
+}
+
+pub fn new_player() {
+  State(
+    Player(
+      state.Money(state.start_money),
+      state.Health(state.start_health, state.max_health),
+      state.Energy(state.start_energy, state.max_energy),
+      state.NoWeapon,
+      world.Apartment,
+      state.Lookout,
+      0,
+      state.Skills(0, 0, 0, 0),
+    ),
+    None,
+  )
+}
+
+// for debugging
+pub fn new_player_fight() {
+  State(
+    Player(
+      state.Money(state.start_money),
+      state.Health(state.start_health, state.max_health),
+      state.Energy(state.start_energy, state.max_energy),
+      state.NoWeapon,
+      world.Apartment,
+      state.Lookout,
+      0,
+      state.Skills(0, 0, 0, 0),
+    ),
+    option.Some(state.Fight(
+      state.PlayerTurn,
+      enemy.Lvl1 |> enemy.get_enemy,
+      False,
+      None,
+      None,
+    )),
+  )
 }
 
 fn setup_keyboard_listener() -> Effect(Msg) {
@@ -36,13 +84,15 @@ fn setup_keyboard_listener() -> Effect(Msg) {
 
 fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
   case msg {
-    msg.PlayerMove(location) -> handle_move(state, location) |> no_eff
-    msg.PlayerWork -> handle_work(state.p) |> no_eff
-    msg.PlayerFightMove(move) -> handle_fight_move(state, move) |> no_eff
-    msg.PlayerAction(action) -> handle_action(state, action) |> no_eff
-    msg.KeyDown(key) -> handle_keyboard(state, key) |> no_eff
-    msg.Noop -> state |> no_eff
+    msg.PlayerMove(location) -> handle_move(state, location)
+    msg.PlayerWork -> handle_work(state.p)
+    msg.PlayerFightMove(move) -> handle_fight_move(state, move)
+    msg.PlayerAction(action) -> handle_action(state, action)
+    msg.KeyDown(key) -> handle_keyboard(state, key)
+    msg.Noop -> state
   }
+  |> localstore.try_save
+  |> no_eff
 }
 
 fn handle_move(state: State, location: LocationId) -> State {

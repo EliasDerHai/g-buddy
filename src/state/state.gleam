@@ -1,7 +1,7 @@
 import env/enemy.{type Enemy}
 import env/world.{type LocationId}
 import gleam/int
-import gleam/option.{type Option, None}
+import gleam/option.{type Option}
 
 pub type State {
   State(p: Player, fight: Option(Fight))
@@ -83,32 +83,6 @@ pub const max_health = 100
 pub const start_energy = 100
 
 pub const max_energy = 100
-
-pub fn init() -> State {
-  let p =
-    Player(
-      Money(start_money),
-      Health(start_health, max_health),
-      Energy(start_energy, max_energy),
-      NoWeapon,
-      world.Apartment,
-      Lookout,
-      0,
-      Skills(0, 0, 0, 0),
-    )
-  State(
-    p,
-    None,
-    //
-  //     option.Some(Fight(
-  //     PlayerTurn,
-  //     enemy.Lvl1 |> enemy.get_enemy,
-  //     False,
-  //     None,
-  //     None,
-  //   )),
-  )
-}
 
 fn min_max(v: Int, min: Int, max: Int) {
   v

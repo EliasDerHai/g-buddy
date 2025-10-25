@@ -1,7 +1,7 @@
+import app
 import gleam/json
 import gleeunit
 import gleeunit/should
-import state/state
 import state/state_decoder
 import state/state_encoder
 
@@ -10,7 +10,7 @@ pub fn main() {
 }
 
 pub fn state_roundtrip_test() {
-  let state = state.init()
+  let state = app.new_player()
 
   let actual =
     state
