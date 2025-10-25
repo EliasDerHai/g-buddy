@@ -34,8 +34,10 @@ jobs:
       - name: Build Lustre app
         run: gleam run -m lustre/dev build
 
-      - name: Copy custom HTML
-        run: cp index.html dist/index.html
+      - name: Copy custom HTML and assets
+        run: |
+          cp index.html dist/index.html
+          cp assets/* dist/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
