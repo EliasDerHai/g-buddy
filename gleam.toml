@@ -17,8 +17,5 @@ lucide_lustre = { git = "https://github.com/EliasDerHai/lucide_lustre.git", ref 
 [javascript]
 runtime = "node"
 
-[tools.lustre.bin]
-tailwindcss = ".lustre/bin/tailwindcss-macos-arm64/tailwindcss"
-
 [lucide_lustre]
 output_module = "view/icons"
