@@ -2,7 +2,6 @@ import gleam/option.{None}
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
-import lustre/event
 import msg.{type Msg}
 import state/state.{type State}
 import view/generic_view
@@ -16,17 +15,27 @@ pub fn view_settings(s: State) -> List(Element(Msg)) {
       setting_toggle(
         "Autosave",
         "Automatically save your progress",
-        generic_view.toggle_button(s.settings.autosave, msg.Noop),
+        generic_view.toggle_button(
+          s.settings.autosave,
+          msg.SettingChange(msg.SettingToggleAutosave),
+        ),
       ),
       setting_toggle(
         "Autoload",
         "Automatically load your last save on startup",
-        generic_view.toggle_button(s.settings.autoload, msg.Noop),
+        generic_view.toggle_button(
+          s.settings.autoload,
+          msg.SettingChange(msg.SettingToggleAutoload),
+        ),
       ),
       setting_toggle(
         "Reset",
         "Reset the storage deleting all saves & settings",
-        generic_view.simple_warn_button("Reset", msg.Noop, None),
+        generic_view.simple_warn_button(
+          "Reset",
+          msg.SettingChange(msg.SettingReset),
+          None,
+        ),
       ),
     ]),
   ]

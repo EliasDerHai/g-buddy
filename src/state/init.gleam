@@ -6,7 +6,7 @@ import state/state.{
   State,
 }
 
-pub fn new_player() {
+pub fn new_state() {
   State(
     Player(
       Money(state.start_money),
@@ -24,7 +24,7 @@ pub fn new_player() {
 }
 
 // for debugging
-pub fn new_player_fight() {
+pub fn new_state_fight() {
   State(
     Player(
       Money(state.start_money),

@@ -11,7 +11,7 @@ pub type Msg {
   PlayerFightMove(FightMove)
   PlayerAction(Action)
   KeyDown(event: KeyboardEvent)
-  SettingToggle
+  SettingChange(SettingMsg)
   Noop
 }
 
@@ -19,4 +19,11 @@ pub type FightMove {
   Attack
   Flee
   End
+}
+
+pub type SettingMsg {
+  SettingToggleDisplay
+  SettingToggleAutoload
+  SettingToggleAutosave
+  SettingReset
 }

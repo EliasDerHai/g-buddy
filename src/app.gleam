@@ -1,14 +1,13 @@
-// IMPORTS ---------------------------------------------------------------------
-
 import env/action.{type Action}
 import env/fight
 import env/job
 import env/world.{type LocationId}
+import gleam/bool
 import gleam/option.{None, Some}
 import gleam/string
 import lustre
 import lustre/effect.{type Effect}
-import msg.{type FightMove, type KeyboardEvent, type Msg}
+import msg.{type FightMove, type KeyboardEvent, type Msg, type SettingMsg}
 import plinth/browser/document
 import plinth/browser/event
 import state/check
@@ -28,9 +27,15 @@ pub fn main() {
 
 fn init() -> State {
   case localstore.try_load() {
-    None -> init.new_player()
-    // None -> new_player_fight()
-    Some(last) -> last
+    Some(last) -> {
+      case last.settings.autoload {
+        True -> last
+        // copy over 'last' settings (otherwise autoload and autosave would get reseted)
+        False -> State(..init.new_state(), settings: last.settings)
+      }
+    }
+    None -> init.new_state()
+    // _ -> new_state_fight()
   }
 }
 
@@ -52,9 +57,14 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.PlayerAction(action) -> handle_action(state, action)
     msg.KeyDown(key) -> handle_keyboard(state, key)
     msg.Noop -> state
-    msg.SettingToggle -> handle_setting_toggle(state)
+    msg.SettingChange(msg) -> handle_setting_toggle(state, msg)
   }
-  |> localstore.try_save
+  |> fn(state) {
+    case msg != msg.Noop && state.settings.autosave {
+      False -> state
+      True -> localstore.try_save(state)
+    }
+  }
   |> no_eff
 }
 
@@ -111,13 +121,27 @@ fn handle_action(state: State, action: Action) -> State {
   action.apply_action(state, action)
 }
 
-fn handle_setting_toggle(state: State) -> State {
-  let display = case state.settings.display {
-    state.Hidden -> state.SaveLoad
-    state.SaveLoad -> state.Hidden
+fn handle_setting_toggle(state: State, msg: SettingMsg) -> State {
+  let state.Settings(display:, autosave:, autoload:) = state.settings
+
+  let settings = case msg {
+    msg.SettingReset -> {
+      let _ = localstore.reset()
+      state.settings
+    }
+
+    msg.SettingToggleAutoload ->
+      state.Settings(..state.settings, autoload: autoload |> bool.negate)
+    msg.SettingToggleAutosave ->
+      state.Settings(..state.settings, autosave: autosave |> bool.negate)
+    msg.SettingToggleDisplay ->
+      state.Settings(..state.settings, display: case display {
+        state.Hidden -> state.SaveLoad
+        state.SaveLoad -> state.Hidden
+      })
   }
 
-  State(..state, settings: state.Settings(..state.settings, display:))
+  State(..state, settings:)
 }
 
 // util ----------------------------------------

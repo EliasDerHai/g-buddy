@@ -10,11 +10,11 @@ pub fn main() {
 }
 
 pub fn state_roundtrip_no_fight_test() {
-  init.new_player() |> roundtrip
+  init.new_state() |> roundtrip
 }
 
 pub fn state_roundtrip_with_fight_test() {
-  init.new_player_fight() |> roundtrip
+  init.new_state_fight() |> roundtrip
 }
 
 fn roundtrip(state) {

@@ -47,7 +47,11 @@ pub fn view(s: State) -> Element(Msg) {
         state.Hidden -> #(False, [])
         state.SaveLoad -> #(True, setting_view.view_settings(s))
       }
-      generic_view.modal(is_open, Some(msg.SettingToggle), content)
+      generic_view.modal(
+        is_open,
+        Some(msg.SettingChange(msg.SettingToggleDisplay)),
+        content,
+      )
     },
   ]
   |> html.div([], _)
@@ -82,7 +86,11 @@ fn view_right_hud(model: State) -> List(Element(Msg)) {
         |> generic_view.simple_text,
     ]),
     html.div([], [
-      generic_view.simple_button("Settings", msg.SettingToggle, None),
+      generic_view.simple_button(
+        "Settings",
+        msg.SettingChange(msg.SettingToggleDisplay),
+        None,
+      ),
     ]),
   ]
 }

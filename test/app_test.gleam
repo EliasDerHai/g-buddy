@@ -8,7 +8,7 @@ pub fn main() -> Nil {
 }
 
 pub fn init_test() {
-  let s = init.new_player()
+  let s = init.new_state()
 
   assert s.p.health.v == state.start_health
   assert s.p.money.v == state.start_money

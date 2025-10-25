@@ -53,7 +53,7 @@ pub fn simple_warn_button(
   let is_disabled = disabled_reason |> option.is_some
   let state_classes = case is_disabled {
     True -> "bg-gray-700 text-gray-500 cursor-not-allowed"
-    False -> "bg-red-400 text-white hover:bg-blue-700 cursor-pointer"
+    False -> "bg-red-400 text-white hover:bg-red-600 cursor-pointer"
   }
 
   html.span(
