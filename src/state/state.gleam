@@ -10,6 +10,7 @@ pub type State {
     fight: Option(Fight),
     settings: Settings,
     toasts: List(Toast),
+    active_tooltip: Option(String),
   )
 }
 

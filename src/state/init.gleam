@@ -21,6 +21,7 @@ pub fn new_state() {
     None,
     state.Settings(state.Hidden, True, True),
     [],
+    None,
   )
 }
 
@@ -47,5 +48,6 @@ pub fn new_state_fight() {
     )),
     state.Settings(state.Hidden, True, True),
     [],
+    None,
   )
 }

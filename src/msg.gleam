@@ -15,6 +15,7 @@ pub type Msg {
   KeyDown(KeyboardEvent)
   SettingChange(SettingMsg)
   ToastChange(ToastMsg)
+  TooltipChange(TooltipMsg)
   Noop
 }
 
@@ -35,4 +36,9 @@ pub type SettingMsg {
 pub type ToastMsg {
   ToastAdd(Toast)
   ToastRemove(id: Int)
+}
+
+pub type TooltipMsg {
+  TooltipShow(id: String)
+  TooltipHide
 }

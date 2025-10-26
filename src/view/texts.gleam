@@ -1,4 +1,5 @@
 import env/action
+import env/attack
 import env/enemy
 import env/world.{type LocationId}
 import gleam/int
@@ -55,5 +56,13 @@ pub fn disabled_reason(id: check.DeniedReason) -> String {
       "Not enough energy (requires ⚡️" <> cost |> int.to_string <> ")"
     check.Insufficient(action.Money(cost:)) ->
       "Not enough money (price $" <> cost |> int.to_string <> ")"
+  }
+}
+
+pub fn attack(id: attack.AttackId) -> String {
+  case id {
+    attack.NormalBlow -> "Normal Blow"
+    attack.PowerSlam -> "Power Slam"
+    attack.KarateKick -> "Karate Kick"
   }
 }

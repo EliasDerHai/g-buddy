@@ -39,7 +39,7 @@ pub fn view(s: State) -> Element(Msg) {
       let is_open = s.fight |> option.is_some
       let content = case s.fight {
         None -> []
-        Some(fight) -> fight_view.view_fight(s.p, fight)
+        Some(fight) -> fight_view.view_fight(s, fight)
       }
       generic_view.modal(is_open, None, content)
     },

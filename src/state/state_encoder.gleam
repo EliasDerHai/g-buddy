@@ -9,7 +9,7 @@ import state/state.{
 }
 
 pub fn state_to_json(state: State) -> Json {
-  let state.State(p:, fight:, settings:, toasts: _) = state
+  let state.State(p:, fight:, settings:, toasts: _, active_tooltip: _) = state
   json.object([
     #("p", player_to_json(p)),
     #("fight", case fight {

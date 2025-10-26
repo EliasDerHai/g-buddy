@@ -1,6 +1,7 @@
 import env/enemy.{type Enemy, type EnemyId}
 import env/world.{type LocationId}
 import gleam/dynamic/decode.{type Decoder}
+import gleam/option
 import state/state.{
   type Energy, type Fight, type Health, type JobId, type Money, type Phase,
   type Player, type SettingDisplay, type Settings, type Skills, type Stamina,
@@ -11,7 +12,13 @@ pub fn state_decoder() -> Decoder(State) {
   use p <- decode.field("p", player_decoder())
   use fight <- decode.field("fight", decode.optional(fight_decoder()))
   use settings <- decode.field("settings", settings_decoder())
-  decode.success(state.State(p:, fight:, settings:, toasts: []))
+  decode.success(state.State(
+    p:,
+    fight:,
+    settings:,
+    toasts: [],
+    active_tooltip: option.None,
+  ))
 }
 
 pub fn player_decoder() -> Decoder(Player) {

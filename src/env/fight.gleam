@@ -23,7 +23,7 @@ pub fn start_fight(enemy: EnemyId, p: Player) -> Fight {
 }
 
 pub fn player_turn(state: State, move: FightMove) -> State {
-  let State(p:, fight:, settings:, toasts:) = state
+  let State(p:, fight:, settings:, toasts:, active_tooltip:) = state
   let assert Some(fight) = fight
     as "Illegal state - fight move outside of fight"
 
@@ -58,6 +58,7 @@ pub fn player_turn(state: State, move: FightMove) -> State {
         )),
         settings:,
         toasts:,
+        active_tooltip:,
       )
     }
     msg.RegenStamina ->
@@ -73,6 +74,7 @@ pub fn player_turn(state: State, move: FightMove) -> State {
         )),
         settings:,
         toasts:,
+        active_tooltip:,
       )
     msg.FightFlee ->
       State(
@@ -87,16 +89,17 @@ pub fn player_turn(state: State, move: FightMove) -> State {
         )),
         settings:,
         toasts:,
+        active_tooltip:,
       )
     msg.FightEnd -> {
       let assert True = fight.phase |> is_finite_phase as "Illegal state"
-      State(p:, fight: None, settings:, toasts:)
+      State(p:, fight: None, settings:, toasts:, active_tooltip:)
     }
   }
 }
 
 pub fn enemy_turn(state: State) -> State {
-  let State(p:, fight:, settings:, toasts:) = state
+  let State(p:, fight:, settings:, toasts:, active_tooltip:) = state
   let assert Some(fight) = fight
     as "Illegal state - fight move outside of fight"
 
@@ -118,10 +121,11 @@ pub fn enemy_turn(state: State) -> State {
     ),
     settings:,
     toasts:,
+    active_tooltip:,
   )
 }
 
-fn dmg_calc(dmg: Int, crit: Float, def: Int) {
+pub fn dmg_calc(dmg: Int, crit: Float, def: Int) {
   let crit_multiplier = case float.random() <=. crit {
     True -> 2
     False -> 1

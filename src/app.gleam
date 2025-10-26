@@ -67,6 +67,7 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.Noop -> state |> no_eff
     msg.SettingChange(msg) -> handle_setting_toggle(state, msg)
     msg.ToastChange(msg) -> handle_toast(state, msg)
+    msg.TooltipChange(msg) -> handle_tooltip(state, msg)
   }
   |> pair.map_first(try_save_state_to_localstore(msg, _))
 }
@@ -90,12 +91,12 @@ fn handle_keyboard(state: State, ev: KeyboardEvent) -> #(State, Effect(a)) {
 }
 
 fn handle_fight_move(state: State, move: FightMove) -> #(State, Effect(a)) {
-  let next_state = fight.player_turn(state, move)
+  let state = fight.player_turn(state, move)
 
   // immediately do enemy-turn (if it's his turn)
-  case next_state {
-    State(_, option.Some(fight), _, _) if fight.phase == state.EnemyTurn ->
-      fight.enemy_turn(next_state)
+  case state {
+    State(_, option.Some(fight), _, _, _) if fight.phase == state.EnemyTurn ->
+      fight.enemy_turn(state)
     s -> s
   }
   |> no_eff
@@ -178,6 +179,13 @@ fn handle_toast(state: State, msg: ToastMsg) -> #(State, Effect(Msg)) {
         toasts: state.toasts |> list.filter(fn(el) { el.id != id }),
       )
       |> no_eff
+  }
+}
+
+fn handle_tooltip(state: State, msg: msg.TooltipMsg) -> #(State, Effect(Msg)) {
+  case msg {
+    msg.TooltipShow(id) -> State(..state, active_tooltip: Some(id)) |> no_eff
+    msg.TooltipHide -> State(..state, active_tooltip: None) |> no_eff
   }
 }
 
