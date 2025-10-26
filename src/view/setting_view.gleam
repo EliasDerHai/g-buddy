@@ -1,4 +1,3 @@
-import gleam/option.{None}
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
@@ -31,10 +30,9 @@ pub fn view_settings(s: State) -> List(Element(Msg)) {
       setting_toggle(
         "Reset",
         "Reset the storage deleting all saves & settings",
-        generic_view.simple_warn_button(
+        generic_view.warning_button(
           "Reset",
           msg.SettingChange(msg.SettingReset),
-          None,
         ),
       ),
     ]),

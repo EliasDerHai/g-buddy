@@ -61,7 +61,7 @@ pub fn player_turn(state: State, move: FightMove) -> State {
         active_tooltip:,
       )
     }
-    msg.RegenStamina ->
+    msg.FightRegenStamina ->
       State(
         p:,
         fight: Some(Fight(

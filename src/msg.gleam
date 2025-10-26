@@ -21,7 +21,7 @@ pub type Msg {
 
 pub type FightMove {
   FightAttack(AttackMove)
-  RegenStamina
+  FightRegenStamina
   FightFlee
   FightEnd
 }

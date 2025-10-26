@@ -8,107 +8,155 @@ import lustre/event
 import msg.{type Msg}
 import view/icons
 
-pub fn simple_text(t: String) -> Element(a) {
-  html.span([], [html.text(t)])
+pub type ButtonStyle {
+  Primary
+  Warning
+  Secondary
 }
 
+pub type ButtonConfig {
+  ButtonConfig(
+    label: String,
+    on_click: Msg,
+    disabled_reason: Option(String),
+    icon: Option(Element(Msg)),
+    style: ButtonStyle,
+    full_width: Bool,
+  )
+}
+
+pub fn default_config(label: String, on_click: Msg) -> ButtonConfig {
+  ButtonConfig(
+    label: label,
+    on_click: on_click,
+    disabled_reason: None,
+    icon: None,
+    style: Primary,
+    full_width: False,
+  )
+}
+
+/// Basic button with primary styling
+pub fn button(label: String, on_click: Msg) -> Element(Msg) {
+  default_config(label, on_click)
+  |> custom_button
+}
+
+/// Button with icon
+pub fn button_with_icon(
+  icon: Element(Msg),
+  label: String,
+  on_click: Msg,
+) -> Element(Msg) {
+  ButtonConfig(..default_config(label, on_click), icon: Some(icon))
+  |> custom_button
+}
+
+/// Warning/danger button (red)
+pub fn warning_button(label: String, on_click: Msg) -> Element(Msg) {
+  ButtonConfig(..default_config(label, on_click), style: Warning)
+  |> custom_button
+}
+
+/// Full width button
+pub fn full_width_button(label: String, on_click: Msg) -> Element(Msg) {
+  ButtonConfig(..default_config(label, on_click), full_width: True)
+  |> custom_button
+}
+
+/// Full width button with icon
+pub fn full_width_icon_button(
+  icon: Element(Msg),
+  label: String,
+  on_click: Msg,
+) -> Element(Msg) {
+  ButtonConfig(
+    ..default_config(label, on_click),
+    icon: Some(icon),
+    full_width: True,
+  )
+  |> custom_button
+}
+
+/// Disabled button with reason tooltip
+pub fn disabled_button(
+  label: String,
+  on_click: Msg,
+  reason: String,
+) -> Element(Msg) {
+  ButtonConfig(..default_config(label, on_click), disabled_reason: Some(reason))
+  |> custom_button
+}
+
+/// @deprecated Use `button` instead
 pub fn simple_button(
   t: String,
   msg: Msg,
   disabled_reason: Option(String),
 ) -> Element(Msg) {
-  let base_classes = "px-6 py-3 rounded-lg font-medium transition-colors"
-  let is_disabled = disabled_reason |> option.is_some
-  let state_classes = case is_disabled {
-    True -> "bg-gray-700 text-gray-500 cursor-not-allowed"
-    False -> "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
-  }
-
-  html.span(
-    case disabled_reason {
-      None -> []
-      Some(disabled_reason) -> [attribute.title(disabled_reason)]
-    },
-    [
-      html.button(
-        [
-          attribute.class(base_classes <> " " <> state_classes),
-          attribute.disabled(is_disabled),
-          event.on_click(msg),
-        ],
-        [
-          html.span([attribute.class("text-sm")], [html.text(t)]),
-        ],
-      ),
-    ],
-  )
+  ButtonConfig(..default_config(t, msg), disabled_reason: disabled_reason)
+  |> custom_button
 }
 
-pub fn icon_button(
-  icon: Element(Msg),
-  t: String,
-  msg: Msg,
-  disabled_reason: Option(String),
-) -> Element(Msg) {
+/// Fully customizable button - use this for 1% cases that need full control
+pub fn custom_button(config: ButtonConfig) -> Element(Msg) {
+  let ButtonConfig(
+    label:,
+    on_click:,
+    disabled_reason:,
+    icon:,
+    style:,
+    full_width:,
+  ) = config
+
+  let is_disabled = disabled_reason |> option.is_some
+
   let base_classes =
-    "px-6 py-3 rounded-lg font-medium transition-colors flex gap-2 justify-center"
-  let is_disabled = disabled_reason |> option.is_some
-  let state_classes = case is_disabled {
-    True -> "bg-gray-700 text-gray-500 cursor-not-allowed"
-    False -> "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+    "px-6 py-3 rounded-lg font-medium transition-colors "
+    <> case icon {
+      Some(_) -> "flex gap-2 items-center justify-center "
+      None -> ""
+    }
+    <> case full_width {
+      True -> "w-full "
+      False -> ""
+    }
+
+  let state_classes = case is_disabled, style {
+    True, _ -> "bg-gray-700 text-gray-500 cursor-not-allowed"
+    False, Primary -> "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+    False, Warning -> "bg-red-400 text-white hover:bg-red-600 cursor-pointer"
+    False, Secondary ->
+      "bg-gray-600 text-white hover:bg-gray-700 cursor-pointer"
   }
 
-  html.span(
-    case disabled_reason {
-      None -> []
-      Some(disabled_reason) -> [attribute.title(disabled_reason)]
-    },
-    [
-      html.button(
-        [
-          attribute.class(base_classes <> " " <> state_classes),
-          attribute.disabled(is_disabled),
-          event.on_click(msg),
-        ],
-        [
-          icon,
-          html.span([attribute.class("text-sm")], [html.text(t)]),
-        ],
-      ),
-    ],
-  )
+  let button_element =
+    html.button(
+      [
+        attribute.class(base_classes <> state_classes),
+        attribute.disabled(is_disabled),
+        event.on_click(on_click),
+      ],
+      case icon {
+        Some(icon_el) -> [
+          icon_el,
+          html.span([attribute.class("text-sm")], [html.text(label)]),
+        ]
+        None -> [html.span([attribute.class("text-sm")], [html.text(label)])]
+      },
+    )
+
+  // Only wrap in span with title if disabled
+  case disabled_reason {
+    None -> button_element
+    Some(reason) -> html.span([attribute.title(reason)], [button_element])
+  }
 }
 
-pub fn simple_warn_button(
-  t: String,
-  msg: Msg,
-  disabled_reason: Option(String),
-) -> Element(Msg) {
-  let base_classes = "px-6 py-3 rounded-lg font-medium transition-colors"
-  let is_disabled = disabled_reason |> option.is_some
-  let state_classes = case is_disabled {
-    True -> "bg-gray-700 text-gray-500 cursor-not-allowed"
-    False -> "bg-red-400 text-white hover:bg-red-600 cursor-pointer"
-  }
+// OTHER UI COMPONENTS ---------------------------------------------------------
 
-  html.span(
-    case disabled_reason {
-      None -> []
-      Some(disabled_reason) -> [attribute.title(disabled_reason)]
-    },
-    [
-      html.button(
-        [
-          attribute.class(base_classes <> " " <> state_classes),
-          attribute.disabled(is_disabled),
-          event.on_click(msg),
-        ],
-        [
-          html.span([attribute.class("text-sm")], [html.text(t)]),
-        ],
-      ),
-    ],
-  )
+pub fn simple_text(t: String) -> Element(a) {
+  html.span([], [html.text(t)])
 }
 
 pub fn toggle_button(active: Bool, on_toggle: Msg) -> Element(Msg) {
@@ -121,6 +169,7 @@ pub fn toggle_button(active: Bool, on_toggle: Msg) -> Element(Msg) {
     True -> "translate-x-5"
     False -> "translate-x-0"
   }
+
   html.button(
     [
       attribute.class(

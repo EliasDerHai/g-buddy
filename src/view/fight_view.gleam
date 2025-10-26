@@ -3,12 +3,14 @@ import env/weapon
 import gleam/float
 import gleam/int
 import gleam/list
-import gleam/option.{None}
+import gleam/option
 import gleam/string
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
-import msg.{type Msg, FightAttack, FightEnd, FightFlee, PlayerFightMove}
+import msg.{
+  type Msg, FightAttack, FightEnd, FightFlee, FightRegenStamina, PlayerFightMove,
+}
 import state/state.{
   type Fight, type State, EnemyTurn, EnemyWon, PlayerFled, PlayerTurn, PlayerWon,
 }
@@ -93,28 +95,39 @@ pub fn view_fight(state: State, fight: Fight) -> List(Element(Msg)) {
       },
     ]),
     // Actions
-    html.div([attribute.class("flex gap-4 justify-center")], case fight.phase {
-      PlayerTurn ->
-        attack.get_attack_options(p, fight)
-        |> list.map(fn(attack) { view_attack_button(state, attack) })
-        |> list.append([
-          generic_view.simple_button("Flee", PlayerFightMove(FightFlee), None),
-        ])
-      PlayerWon | EnemyWon | PlayerFled -> [
-        generic_view.simple_button("Close", PlayerFightMove(FightEnd), None),
-      ]
-      EnemyTurn ->
-        panic as "Illegal state - EnemyTurn has to be processed before view"
-    }),
+    html.div(
+      [attribute.class("flex flex-col gap-4 justify-center w-80 m-auto")],
+      case fight.phase {
+        PlayerTurn ->
+          attack.get_attack_options(p, fight)
+          |> list.map(fn(attack) { view_attack_button(state, attack) })
+          |> list.append([
+            generic_view.full_width_icon_button(
+              icons.arrow_big_up_dash([]),
+              "Regen. Stamina",
+              PlayerFightMove(FightRegenStamina),
+            ),
+            generic_view.full_width_icon_button(
+              icons.arrow_big_left_dash([]),
+              "Flee",
+              PlayerFightMove(FightFlee),
+            ),
+          ])
+        PlayerWon | EnemyWon | PlayerFled -> [
+          generic_view.full_width_button("Close", PlayerFightMove(FightEnd)),
+        ]
+        EnemyTurn ->
+          panic as "Illegal state - EnemyTurn has to be processed before view"
+      },
+    ),
   ]
 }
 
 pub fn view_attack_button(state: State, attack: AttackMove) -> Element(Msg) {
-  generic_view.icon_button(
+  generic_view.full_width_icon_button(
     icons.sword([]),
     attack.id |> texts.attack,
     PlayerFightMove(FightAttack(attack)),
-    None,
   )
   |> tooltip.tooltip_top(
     state.active_tooltip,
