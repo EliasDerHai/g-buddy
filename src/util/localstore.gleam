@@ -19,11 +19,11 @@ type PersistenceError {
 fn log_e(e: PersistenceError) {
   case e {
     LocalStoreNotAvailable -> "storage not available"
-    NotFound -> "not found"
-    OperationFailed -> "operation failed"
-    DecodingFailed -> "decoding failed"
+    NotFound -> "stored element not found"
+    OperationFailed -> "storage operation failed"
+    DecodingFailed -> "decoding stored element failed"
   }
-  |> io.print_error
+  |> io.println_error
 }
 
 pub fn try_save(state: State) -> State {

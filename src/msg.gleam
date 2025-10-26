@@ -1,4 +1,5 @@
 import env/action.{type Action}
+import env/attack.{type AttackMove}
 import env/world.{type LocationId}
 import plinth/browser/event.{type Event, type UIEvent}
 import state/toast.{type Toast}
@@ -11,16 +12,17 @@ pub type Msg {
   PlayerWork
   PlayerFightMove(FightMove)
   PlayerAction(Action)
-  KeyDown(event: KeyboardEvent)
+  KeyDown(KeyboardEvent)
   SettingChange(SettingMsg)
   ToastChange(ToastMsg)
   Noop
 }
 
 pub type FightMove {
-  Attack
-  Flee
-  End
+  FightAttack(AttackMove)
+  RegenStamina
+  FightFlee
+  FightEnd
 }
 
 pub type SettingMsg {

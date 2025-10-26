@@ -1,9 +1,12 @@
+import env/attack
 import gleam/int
+import gleam/list
 import gleam/option.{None}
+import gleam/string
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
-import msg.{type Msg, Attack, End, Flee, PlayerFightMove}
+import msg.{type Msg, FightAttack, FightEnd, FightFlee, PlayerFightMove}
 import state/state.{
   type Fight, type Player, EnemyTurn, EnemyWon, PlayerFled, PlayerTurn,
   PlayerWon,
@@ -29,6 +32,14 @@ pub fn view_fight(p: Player, fight: Fight) -> List(Element(Msg)) {
               <> int.to_string(p.health.v)
               <> "/"
               <> int.to_string(p.health.max),
+            ),
+          ]),
+          html.p([], [
+            html.text(
+              "Stamina: "
+              <> int.to_string(fight.stamina.v)
+              <> "/"
+              <> int.to_string(fight.stamina.max),
             ),
           ]),
         ]
@@ -78,12 +89,20 @@ pub fn view_fight(p: Player, fight: Fight) -> List(Element(Msg)) {
     ]),
     // Actions
     html.div([attribute.class("flex gap-4 justify-center")], case fight.phase {
-      PlayerTurn -> [
-        generic_view.simple_button("Attack", PlayerFightMove(Attack), None),
-        generic_view.simple_button("Flee", PlayerFightMove(Flee), None),
-      ]
+      PlayerTurn ->
+        attack.get_attack_options(p, fight)
+        |> list.map(fn(attack) {
+          generic_view.simple_button(
+            "Attack (" <> attack |> string.inspect <> ")",
+            PlayerFightMove(FightAttack(attack)),
+            None,
+          )
+        })
+        |> list.append([
+          generic_view.simple_button("Flee", PlayerFightMove(FightFlee), None),
+        ])
       PlayerWon | EnemyWon | PlayerFled -> [
-        generic_view.simple_button("Close", PlayerFightMove(End), None),
+        generic_view.simple_button("Close", PlayerFightMove(FightEnd), None),
       ]
       EnemyTurn ->
         panic as "Illegal state - EnemyTurn has to be processed before view"

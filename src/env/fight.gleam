@@ -7,7 +7,7 @@ import gleam/option.{None, Some}
 import msg.{type FightMove}
 import state/state.{
   type Fight, type Phase, type Player, type State, EnemyTurn, EnemyWon, Fight,
-  Player, PlayerFled, PlayerTurn, PlayerWon, State,
+  Player, PlayerFled, PlayerTurn, PlayerWon, Stamina, State,
 }
 
 pub fn start_fight(enemy: EnemyId, p: Player) -> Fight {
@@ -18,7 +18,8 @@ pub fn start_fight(enemy: EnemyId, p: Player) -> Fight {
     False -> EnemyTurn
   }
 
-  Fight(phase, enemy, False, None, None)
+  let max_stamina = p.skills.dexterity + p.energy.v + 100
+  Fight(phase, enemy, Stamina(max_stamina, max_stamina), False, None, None)
 }
 
 pub fn player_turn(state: State, move: FightMove) -> State {
@@ -27,14 +28,17 @@ pub fn player_turn(state: State, move: FightMove) -> State {
     as "Illegal state - fight move outside of fight"
 
   case move {
-    msg.Attack -> {
+    msg.FightAttack(move) -> {
       let assert state.PlayerTurn = fight.phase
         as "Illegal state - cannot attack, not player's turn"
+      let assert True = move.stamina_cost <= fight.stamina.v
+        as "Illegal state - not enough stamina"
 
       let weapon.WeaponStat(id: _, dmg:, def: _, crit:) =
         p.weapon |> weapon.weapon_stats
       let real_dmg = dmg_calc(dmg, crit, fight.enemy.def)
       let health = fight.enemy.health - real_dmg
+      let stamina = fight.stamina |> state.add_stamina(-move.stamina_cost)
 
       let enemy = Enemy(..fight.enemy, health:)
       let next_phase = case enemy.health > 0 {
@@ -44,19 +48,47 @@ pub fn player_turn(state: State, move: FightMove) -> State {
 
       State(
         p:,
-        fight: Some(Fight(next_phase, enemy, False, Some(real_dmg), None)),
+        fight: Some(Fight(
+          next_phase,
+          enemy,
+          stamina,
+          False,
+          Some(real_dmg),
+          None,
+        )),
         settings:,
         toasts:,
       )
     }
-    msg.Flee ->
+    msg.RegenStamina ->
       State(
         p:,
-        fight: Some(Fight(EnemyTurn, fight.enemy, True, None, None)),
+        fight: Some(Fight(
+          EnemyTurn,
+          fight.enemy,
+          fight.stamina |> state.refill_stamina,
+          False,
+          None,
+          None,
+        )),
         settings:,
         toasts:,
       )
-    msg.End -> {
+    msg.FightFlee ->
+      State(
+        p:,
+        fight: Some(Fight(
+          EnemyTurn,
+          fight.enemy,
+          fight.stamina,
+          True,
+          None,
+          None,
+        )),
+        settings:,
+        toasts:,
+      )
+    msg.FightEnd -> {
       let assert True = fight.phase |> is_finite_phase as "Illegal state"
       State(p:, fight: None, settings:, toasts:)
     }

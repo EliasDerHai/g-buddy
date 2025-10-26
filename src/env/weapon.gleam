@@ -7,8 +7,8 @@ pub type WeaponStat {
 
 pub fn weapon_stats(id: WeaponId) {
   case id {
-    state.NoWeapon -> WeaponStat(id, dmg: 1, def: 1, crit: 0.0)
-    state.BrassKnuckles -> WeaponStat(id, dmg: 2, def: 1, crit: 0.05)
+    state.NoWeapon -> WeaponStat(id, dmg: 2, def: 1, crit: 0.0)
+    state.BrassKnuckles -> WeaponStat(id, dmg: 3, def: 1, crit: 0.05)
   }
   |> assert_bounds
 }

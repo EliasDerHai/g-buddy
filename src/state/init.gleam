@@ -37,7 +37,14 @@ pub fn new_state_fight() {
       0,
       Skills(0, 0, 0, 0),
     ),
-    Some(Fight(PlayerTurn, Lvl1 |> enemy.get_enemy, False, None, None)),
+    Some(Fight(
+      PlayerTurn,
+      Lvl1 |> enemy.get_enemy,
+      state.Stamina(100, 100),
+      False,
+      None,
+      None,
+    )),
     state.Settings(state.Hidden, True, True),
     [],
   )

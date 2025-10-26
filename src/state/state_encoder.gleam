@@ -4,8 +4,8 @@ import gleam/json.{type Json}
 import gleam/option.{None, Some}
 import state/state.{
   type Energy, type Fight, type Health, type JobId, type Money, type Phase,
-  type Player, type SettingDisplay, type Settings, type Skills, type State,
-  type WeaponId,
+  type Player, type SettingDisplay, type Settings, type Skills, type Stamina,
+  type State, type WeaponId,
 }
 
 pub fn state_to_json(state: State) -> Json {
@@ -58,6 +58,11 @@ pub fn energy_to_json(energy: Energy) -> Json {
   json.object([#("v", json.int(v)), #("max", json.int(max))])
 }
 
+pub fn stamina_to_json(stamina: Stamina) -> Json {
+  let state.Stamina(v:, max:) = stamina
+  json.object([#("v", json.int(v)), #("max", json.int(max))])
+}
+
 pub fn weapon_id_to_json(weapon: WeaponId) -> Json {
   case weapon {
     state.NoWeapon -> json.string("NoWeapon")
@@ -98,6 +103,7 @@ pub fn fight_to_json(fight: Fight) -> Json {
   let state.Fight(
     phase:,
     enemy:,
+    stamina:,
     flee_pending:,
     last_player_dmg:,
     last_enemy_dmg:,
@@ -105,6 +111,7 @@ pub fn fight_to_json(fight: Fight) -> Json {
   json.object([
     #("phase", phase_to_json(phase)),
     #("enemy", enemy_to_json(enemy)),
+    #("stamina", stamina_to_json(stamina)),
     #("flee_pending", json.bool(flee_pending)),
     #("last_player_dmg", case last_player_dmg {
       None -> json.null()

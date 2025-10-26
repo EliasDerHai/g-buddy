@@ -3,8 +3,8 @@ import env/world.{type LocationId}
 import gleam/dynamic/decode.{type Decoder}
 import state/state.{
   type Energy, type Fight, type Health, type JobId, type Money, type Phase,
-  type Player, type SettingDisplay, type Settings, type Skills, type State,
-  type WeaponId,
+  type Player, type SettingDisplay, type Settings, type Skills, type Stamina,
+  type State, type WeaponId,
 }
 
 pub fn state_decoder() -> Decoder(State) {
@@ -52,6 +52,12 @@ pub fn energy_decoder() -> Decoder(Energy) {
   decode.success(state.Energy(v:, max:))
 }
 
+pub fn stamina_decoder() -> Decoder(Stamina) {
+  use v <- decode.field("v", decode.int)
+  use max <- decode.field("max", decode.int)
+  decode.success(state.Stamina(v:, max:))
+}
+
 pub fn weapon_id_decoder() -> Decoder(WeaponId) {
   use str <- decode.then(decode.string)
   case str {
@@ -95,6 +101,7 @@ pub fn skills_decoder() -> Decoder(Skills) {
 pub fn fight_decoder() -> Decoder(Fight) {
   use phase <- decode.field("phase", phase_decoder())
   use enemy <- decode.field("enemy", enemy_decoder())
+  use stamina <- decode.field("stamina", stamina_decoder())
   use flee_pending <- decode.field("flee_pending", decode.bool)
   use last_player_dmg <- decode.field(
     "last_player_dmg",
@@ -107,6 +114,7 @@ pub fn fight_decoder() -> Decoder(Fight) {
   decode.success(state.Fight(
     phase:,
     enemy:,
+    stamina:,
     flee_pending:,
     last_player_dmg:,
     last_enemy_dmg:,

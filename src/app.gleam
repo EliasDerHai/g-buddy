@@ -32,16 +32,18 @@ pub fn main() {
 }
 
 fn init() -> State {
+  let new_state = init.new_state_fight()
+  // let new_state = init.new_state()
+
   case localstore.try_load() {
     Some(last) -> {
       case last.settings.autoload {
         True -> last
         // copy over 'last' settings (otherwise autoload and autosave would get reseted)
-        False -> State(..init.new_state(), settings: last.settings)
+        False -> State(..new_state, settings: last.settings)
       }
     }
-    None -> init.new_state()
-    // _ -> new_state_fight()
+    None -> new_state
   }
 }
 
@@ -66,12 +68,7 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.SettingChange(msg) -> handle_setting_toggle(state, msg)
     msg.ToastChange(msg) -> handle_toast(state, msg)
   }
-  |> pair.map_first(fn(state) {
-    case msg != msg.Noop && state.settings.autosave {
-      False -> state
-      True -> localstore.try_save(state)
-    }
-  })
+  |> pair.map_first(try_save_state_to_localstore(msg, _))
 }
 
 fn handle_move(state: State, location: LocationId) -> #(State, Effect(a)) {
@@ -98,7 +95,7 @@ fn handle_fight_move(state: State, move: FightMove) -> #(State, Effect(a)) {
   // immediately do enemy-turn (if it's his turn)
   case next_state {
     State(_, option.Some(fight), _, _) if fight.phase == state.EnemyTurn ->
-      fight.enemy_turn(state)
+      fight.enemy_turn(next_state)
     s -> s
   }
   |> no_eff
@@ -181,6 +178,18 @@ fn handle_toast(state: State, msg: ToastMsg) -> #(State, Effect(Msg)) {
         toasts: state.toasts |> list.filter(fn(el) { el.id != id }),
       )
       |> no_eff
+  }
+}
+
+fn try_save_state_to_localstore(msg: Msg, state: State) {
+  case msg {
+    msg.PlayerAction(_)
+      | msg.PlayerWork
+      | msg.PlayerMove(_)
+      | msg.PlayerFightMove(_)
+      if state.settings.autosave
+    -> localstore.try_save(state)
+    _ -> state
   }
 }
 

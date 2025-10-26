@@ -30,6 +30,10 @@ pub type Energy {
   Energy(v: Int, max: Int)
 }
 
+pub type Stamina {
+  Stamina(v: Int, max: Int)
+}
+
 pub type JobId {
   Lookout
   Slinger
@@ -65,6 +69,7 @@ pub type Fight {
   Fight(
     phase: Phase,
     enemy: Enemy,
+    stamina: Stamina,
     flee_pending: Bool,
     last_player_dmg: Option(Int),
     last_enemy_dmg: Option(Int),
@@ -107,12 +112,16 @@ fn min_max(v: Int, min: Int, max: Int) {
 }
 
 // can never go out of bounds [0,100]
-pub fn add_energy(current: Energy, v: Int) {
+pub fn add_energy(current: Energy, v: Int) -> Energy {
   Energy(current.v + v |> min_max(0, current.max), current.max)
 }
 
+pub fn add_stamina(current: Stamina, v: Int) -> Stamina {
+  Stamina(current.v + v |> min_max(0, current.max), current.max)
+}
+
 // can go negative -> game-over condition
-pub fn add_health(current: Health, v: Int) {
+pub fn add_health(current: Health, v: Int) -> Health {
   Health(current.v + v |> int.min(current.max), current.max)
 }
 
@@ -128,4 +137,17 @@ pub fn add_skill(current: Skills, id: SkillId, v: Int) -> Skills {
     Intelligence -> Skills(..current, intelligence: current.intelligence + v)
     Strength -> Skills(..current, strength: current.strength + v)
   }
+}
+
+pub fn get_skill(s: Skills, id: SkillId) -> Int {
+  case id {
+    Charm -> s.charm
+    Dexterity -> s.dexterity
+    Intelligence -> s.intelligence
+    Strength -> s.strength
+  }
+}
+
+pub fn refill_stamina(current: Stamina) {
+  Stamina(current.max, current.max)
 }
