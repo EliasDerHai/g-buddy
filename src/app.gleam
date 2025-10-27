@@ -197,6 +197,10 @@ fn try_save_state_to_localstore(msg: Msg, state: State) {
       | msg.PlayerFightMove(_)
       if state.settings.autosave
     -> localstore.try_save(state)
+    // FIXME: storing autoload/autosave with state is inevitably a bit broken - options:
+    // - split into different fields on localstore (clean)
+    // - check current persistent state (patch settings, fallback init_state) (bit hacky)
+    msg.SettingChange(_) -> localstore.try_save(state)
     _ -> state
   }
 }

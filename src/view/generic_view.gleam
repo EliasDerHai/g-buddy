@@ -78,17 +78,6 @@ pub fn full_width_icon_button(
   |> custom_button
 }
 
-/// Disabled button with reason tooltip
-pub fn disabled_button(
-  label: String,
-  on_click: Msg,
-  reason: String,
-) -> Element(Msg) {
-  ButtonConfig(..default_config(label, on_click), disabled_reason: Some(reason))
-  |> custom_button
-}
-
-/// @deprecated Use `button` instead
 pub fn simple_button(
   t: String,
   msg: Msg,
@@ -150,6 +139,8 @@ pub fn custom_button(config: ButtonConfig) -> Element(Msg) {
   case disabled_reason {
     None -> button_element
     Some(reason) -> html.span([attribute.title(reason)], [button_element])
+    // TODO: use tooltip_top instead of attribute.title
+    //tooltip.tooltip_top(button_element, Some(reason), )  // 
   }
 }
 
@@ -201,22 +192,22 @@ pub fn modal(
 
   html.div([], [
     // Backdrop
-    case closeable {
-      Some(effect) ->
-        html.div(
-          [
-            attribute.class("fixed inset-0 bg-black/50 z-1"),
-            event.on_click(effect),
-          ],
-          [],
-        )
-      None -> html.div([], [])
-    },
+    html.div(
+      [
+        attribute.class("fixed inset-0 bg-black/60 z-10"),
+        event.on_click(case closeable {
+          None -> msg.Noop
+          Some(msg) -> msg
+        })
+          |> event.stop_propagation,
+      ],
+      [],
+    ),
     // Modal
     html.div(
       [
         attribute.class(
-          "fixed inset-0 grid place-items-center z-2 pointer-events-none",
+          "fixed inset-0 grid z-20 place-items-center pointer-events-none",
         ),
       ],
       [

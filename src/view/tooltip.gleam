@@ -67,7 +67,7 @@ fn render_tooltip(
   html.div(
     [
       attribute.class(
-        "absolute z-50 bg-neutral-900 text-white rounded-lg shadow-xl p-4
+        "absolute z-10 bg-neutral-900 text-white rounded-lg shadow-xl p-4
         min-w-[250px] max-w-[400px]
         animate-in fade-in duration-150 " <> position_classes,
       ),
