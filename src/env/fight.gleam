@@ -23,8 +23,7 @@ pub fn start_fight(enemy: EnemyId, p: Player) -> Fight {
 }
 
 pub fn player_turn(state: State, move: FightMove) -> State {
-  let State(p:, fight:, settings:, toasts:, active_tooltip:) = state
-  let assert Some(fight) = fight
+  let assert Some(fight) = state.fight
     as "Illegal state - fight move outside of fight"
 
   case move {
@@ -35,7 +34,7 @@ pub fn player_turn(state: State, move: FightMove) -> State {
         as "Illegal state - not enough stamina"
 
       let weapon.WeaponStat(id: _, dmg:, def: _, crit:) =
-        p.equipped_weapon |> weapon.weapon_stats
+        state.p.equipped_weapon |> weapon.weapon_stats
       let real_dmg = dmg_calc(dmg, crit, fight.enemy.def)
       let health = fight.enemy.health - real_dmg
       let stamina = fight.stamina |> state.add_stamina(-move.stamina_cost)
@@ -47,7 +46,7 @@ pub fn player_turn(state: State, move: FightMove) -> State {
       }
 
       State(
-        p:,
+        ..state,
         fight: Some(Fight(
           next_phase,
           enemy,
@@ -56,14 +55,11 @@ pub fn player_turn(state: State, move: FightMove) -> State {
           Some(real_dmg),
           None,
         )),
-        settings:,
-        toasts:,
-        active_tooltip:,
       )
     }
     msg.FightRegenStamina ->
       State(
-        p:,
+        ..state,
         fight: Some(Fight(
           EnemyTurn,
           fight.enemy,
@@ -72,13 +68,10 @@ pub fn player_turn(state: State, move: FightMove) -> State {
           None,
           None,
         )),
-        settings:,
-        toasts:,
-        active_tooltip:,
       )
     msg.FightFlee ->
       State(
-        p:,
+        ..state,
         fight: Some(Fight(
           EnemyTurn,
           fight.enemy,
@@ -87,26 +80,22 @@ pub fn player_turn(state: State, move: FightMove) -> State {
           None,
           None,
         )),
-        settings:,
-        toasts:,
-        active_tooltip:,
       )
     msg.FightEnd -> {
       let assert True = fight.phase |> is_finite_phase as "Illegal state"
-      State(p:, fight: None, settings:, toasts:, active_tooltip:)
+      State(..state, fight: None)
     }
   }
 }
 
 pub fn enemy_turn(state: State) -> State {
-  let State(p:, fight:, settings:, toasts:, active_tooltip:) = state
-  let assert Some(fight) = fight
+  let assert Some(fight) = state.fight
     as "Illegal state - fight move outside of fight"
 
   let enemy = fight.enemy
-  let w_stats = p.equipped_weapon |> weapon.weapon_stats
+  let w_stats = state.p.equipped_weapon |> weapon.weapon_stats
   let real_dmg = dmg_calc(enemy.dmg, enemy.crit, w_stats.def)
-  let health = p.health |> state.add_health(-real_dmg)
+  let health = state.p.health |> state.add_health(-real_dmg)
 
   let next_phase = case health.v > 0, fight.flee_pending {
     True, True -> PlayerFled
@@ -115,13 +104,11 @@ pub fn enemy_turn(state: State) -> State {
   }
 
   State(
-    p: Player(..p, health:),
+    ..state,
+    p: Player(..state.p, health:),
     fight: Some(
       Fight(..fight, phase: next_phase, last_enemy_dmg: Some(real_dmg)),
     ),
-    settings:,
-    toasts:,
-    active_tooltip:,
   )
 }
 

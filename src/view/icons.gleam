@@ -92,3 +92,37 @@ pub fn arrow_big_left_dash(attributes: List(Attribute(a))) {
     ],
   )
 }
+
+pub fn shopping_cart(attributes: List(Attribute(a))) {
+  svg.svg(
+    [
+      attribute("stroke-linejoin", "round"),
+      attribute("stroke-linecap", "round"),
+      attribute("stroke-width", "2"),
+      attribute("stroke", "currentColor"),
+      attribute("fill", "none"),
+      attribute("viewBox", "0 0 24 24"),
+      attribute("height", "24"),
+      attribute("width", "24"),
+      ..attributes
+    ],
+    [
+      svg.circle([
+        attribute("r", "1"),
+        attribute("cy", "21"),
+        attribute("cx", "8"),
+      ]),
+      svg.circle([
+        attribute("r", "1"),
+        attribute("cy", "21"),
+        attribute("cx", "19"),
+      ]),
+      svg.path([
+        attribute(
+          "d",
+          "M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12",
+        ),
+      ]),
+    ],
+  )
+}

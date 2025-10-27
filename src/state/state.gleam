@@ -1,6 +1,6 @@
 import env/enemy.{type Enemy}
-import env/shop
-import env/weapon
+import env/shop.{type Buyable, type ConsumableId}
+import env/weapon.{type WeaponId}
 import env/world.{type LocationId}
 import gleam/dict.{type Dict}
 import gleam/int
@@ -11,7 +11,10 @@ import state/toast.{type Toast}
 pub type State {
   State(
     p: Player,
+    // Some == modal fight open
     fight: Option(Fight),
+    // non-empty == modal shop open
+    buyables: List(Buyable),
     settings: Settings,
     toasts: List(Toast),
     active_tooltip: Option(String),
@@ -52,8 +55,8 @@ pub type Skills {
 
 pub type Inventory {
   Inventory(
-    collected_weapons: Set(weapon.WeaponId),
-    consumables: Dict(shop.ConsumableId, Int),
+    collected_weapons: Set(WeaponId),
+    consumables: Dict(ConsumableId, Int),
   )
 }
 
@@ -62,7 +65,7 @@ pub type Player {
     money: Money,
     health: Health,
     energy: Energy,
-    equipped_weapon: weapon.WeaponId,
+    equipped_weapon: WeaponId,
     location: LocationId,
     job: JobId,
     day_count: Int,

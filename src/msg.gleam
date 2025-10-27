@@ -1,5 +1,6 @@
 import env/action.{type Action}
 import env/attack.{type AttackMove}
+import env/shop.{type Buyable}
 import env/world.{type LocationId}
 import plinth/browser/event.{type Event, type UIEvent}
 import state/toast.{type Toast}
@@ -12,6 +13,7 @@ pub type Msg {
   PlayerWork
   PlayerFightMove(FightMove)
   PlayerAction(Action)
+  PlayerShop(PlayerShopMsg)
   KeyDown(KeyboardEvent)
   SettingChange(SettingMsg)
   ToastChange(ToastMsg)
@@ -24,6 +26,12 @@ pub type FightMove {
   FightRegenStamina
   FightFlee
   FightEnd
+}
+
+pub type PlayerShopMsg {
+  ShopOpen(options: List(Buyable))
+  ShopClose
+  ShopBuy(item: Buyable)
 }
 
 pub type SettingMsg {

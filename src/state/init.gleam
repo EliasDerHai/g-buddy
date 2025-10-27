@@ -10,7 +10,14 @@ import state/state.{
 }
 
 pub fn new_state() {
-  State(new_player(), None, state.Settings(state.Hidden, True, True), [], None)
+  State(
+    new_player(),
+    None,
+    [],
+    state.Settings(state.Hidden, True, True),
+    [],
+    None,
+  )
 }
 
 // for debugging
@@ -25,6 +32,7 @@ pub fn new_state_fight() {
       None,
       None,
     )),
+    [],
     state.Settings(state.Hidden, True, True),
     [],
     None,

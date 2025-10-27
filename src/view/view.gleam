@@ -1,6 +1,8 @@
 import env/action
 import env/job
+import env/shop
 import env/world.{type LocationId}
+import gleam/bool
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
@@ -15,7 +17,9 @@ import state/toast
 import util/list_extension
 import view/fight_view
 import view/generic_view
+import view/icons
 import view/setting_view
+import view/shop_view
 import view/texts
 
 pub fn view(s: State) -> Element(Msg) {
@@ -53,6 +57,13 @@ pub fn view(s: State) -> Element(Msg) {
         Some(msg.SettingChange(msg.SettingToggleDisplay)),
         content,
       )
+    },
+    {
+      let #(is_open, content) = case s.buyables {
+        [] -> #(False, [])
+        _ -> #(True, shop_view.view_shop(s))
+      }
+      generic_view.modal(is_open, Some(msg.PlayerShop(msg.ShopClose)), content)
     },
     toast.view_toasts(s.toasts),
   ])
@@ -94,7 +105,7 @@ fn view_right_hud(model: State) -> List(Element(Msg)) {
 
 fn view_navigation_buttons(state: State) -> List(Element(Msg)) {
   let location = world.get_location(state.p.location)
-
+  let buyables = state.p.location |> shop.buyables
   let #(n, e, s, w) = location.connections
 
   [
@@ -131,6 +142,14 @@ fn view_navigation_buttons(state: State) -> List(Element(Msg)) {
               "Work",
               PlayerWork,
               check.check_work(state.p) |> option.map(texts.disabled_reason),
+            ),
+          )
+          |> list_extension.append_when(
+            buyables |> list.is_empty |> bool.negate,
+            generic_view.button_with_icon(
+              icons.shopping_cart([]),
+              "Buy",
+              msg.PlayerShop(msg.ShopOpen(buyables)),
             ),
           )
           |> list.append(view_actions(state)),

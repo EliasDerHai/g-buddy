@@ -1,23 +1,28 @@
 import env/action.{type Action}
 import env/fight
 import env/job
+import env/shop.{type Buyable}
 import env/world.{type LocationId}
 import gleam/bool
+import gleam/dict
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/pair
+import gleam/set
 import gleam/string
 import lustre
 import lustre/effect.{type Effect}
 import msg.{
-  type FightMove, type KeyboardEvent, type Msg, type SettingMsg, type ToastMsg,
+  type FightMove, type KeyboardEvent, type Msg, type PlayerShopMsg,
+  type SettingMsg, type ToastMsg,
 }
 import plinth/browser/document
 import plinth/browser/event
 import state/check
 import state/init
-import state/state.{type Player, type State, Player, State}
+import state/state.{type Player, type State, Inventory, Player, State}
 import state/toast
+import util/either.{Left, Right}
 import util/localstore
 import util/time
 import view/view
@@ -63,6 +68,7 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.PlayerWork -> handle_work(state)
     msg.PlayerFightMove(move) -> handle_fight_move(state, move)
     msg.PlayerAction(action) -> handle_action(state, action)
+    msg.PlayerShop(shop) -> handle_shop(state, shop)
     msg.KeyDown(key) -> handle_keyboard(state, key)
     msg.Noop -> state |> no_eff
     msg.SettingChange(msg) -> handle_setting_toggle(state, msg)
@@ -70,6 +76,40 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.TooltipChange(msg) -> handle_tooltip(state, msg)
   }
   |> pair.map_first(try_save_state_to_localstore(msg, _))
+}
+
+fn handle_shop(state: State, shop: PlayerShopMsg) -> #(State, Effect(Msg)) {
+  let buy = fn(state: State, item: Buyable) -> State {
+    let p = state.p
+    let assert True = p.money.v >= item.price
+    let money = p.money |> state.add_money(-item.price)
+
+    let inventory = case item.id {
+      Right(consumable_id) ->
+        Inventory(
+          ..p.inventory,
+          consumables: p.inventory.consumables
+            |> dict.upsert(consumable_id, fn(amount) {
+              { amount |> option.unwrap(0) } + 1
+            }),
+        )
+      Left(weapon_id) ->
+        Inventory(
+          ..p.inventory,
+          collected_weapons: p.inventory.collected_weapons
+            |> set.insert(weapon_id),
+        )
+    }
+
+    State(..state, p: Player(..p, money:, inventory:))
+  }
+
+  case shop {
+    msg.ShopBuy(item:) -> state |> buy(item)
+    msg.ShopClose -> State(..state, buyables: [])
+    msg.ShopOpen(options:) -> State(..state, buyables: options)
+  }
+  |> no_eff
 }
 
 fn handle_move(state: State, location: LocationId) -> #(State, Effect(a)) {
@@ -94,10 +134,10 @@ fn handle_fight_move(state: State, move: FightMove) -> #(State, Effect(a)) {
   let state = fight.player_turn(state, move)
 
   // immediately do enemy-turn (if it's his turn)
-  case state {
-    State(_, option.Some(fight), _, _, _) if fight.phase == state.EnemyTurn ->
+  case state.fight {
+    option.Some(fight) if fight.phase == state.EnemyTurn ->
       fight.enemy_turn(state)
-    s -> s
+    _ -> state
   }
   |> no_eff
 }
