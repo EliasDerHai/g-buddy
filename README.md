@@ -6,3 +6,6 @@
 
 Just yet another attempt at a turn-based rpg ... this time in gleam :D 
 
+- [theme](./docs/theme.md)
+- [thoughts](./docs/thoughts.md)
+
