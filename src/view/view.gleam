@@ -74,7 +74,7 @@ fn view_right_hud(model: State) -> List(Element(Msg)) {
       [
         "Day: " <> model.p.day_count |> int.to_string,
         "Cash: $" <> model.p.money.v |> int.to_string,
-        "Weapon: " <> model.p.weapon |> texts.weapon,
+        "Weapon: " <> model.p.equipped_weapon |> texts.weapon,
         "Strength: " <> model.p.skills.strength |> int.to_string,
         "Dexterity: " <> model.p.skills.dexterity |> int.to_string,
         "Intelligence: " <> model.p.skills.intelligence |> int.to_string,

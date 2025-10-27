@@ -138,7 +138,7 @@ pub fn view_attack_button(state: State, attack: AttackMove) -> Element(Msg) {
 
 fn tooltip(state: State, attack: AttackMove) {
   let weapon.WeaponStat(id: _, dmg:, def:, crit:) =
-    state.p.weapon |> weapon.weapon_stats
+    state.p.equipped_weapon |> weapon.weapon_stats
 
   [
     html.div([attribute.class("space-y-2")], [

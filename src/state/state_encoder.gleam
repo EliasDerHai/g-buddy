@@ -1,11 +1,13 @@
 import env/enemy.{type Enemy, type EnemyId}
 import env/world.{type LocationId}
+import gleam/dict
 import gleam/json.{type Json}
 import gleam/option.{None, Some}
+import gleam/set
 import state/state.{
-  type Energy, type Fight, type Health, type JobId, type Money, type Phase,
-  type Player, type SettingDisplay, type Settings, type Skills, type Stamina,
-  type State, type WeaponId,
+  type ConsumableId, type Energy, type Fight, type Health, type Inventory,
+  type JobId, type Money, type Phase, type Player, type SettingDisplay,
+  type Settings, type Skills, type Stamina, type State, type WeaponId,
 }
 
 pub fn state_to_json(state: State) -> Json {
@@ -25,21 +27,23 @@ pub fn player_to_json(player: Player) -> Json {
     money:,
     health:,
     energy:,
-    weapon:,
+    equipped_weapon:,
     location:,
     job:,
     day_count:,
     skills:,
+    inventory:,
   ) = player
   json.object([
     #("money", money_to_json(money)),
     #("health", health_to_json(health)),
     #("energy", energy_to_json(energy)),
-    #("weapon", weapon_id_to_json(weapon)),
+    #("weapon", weapon_id_to_json(equipped_weapon)),
     #("location", location_id_to_json(location)),
     #("job", job_id_to_json(job)),
     #("day_count", json.int(day_count)),
     #("skills", skills_to_json(skills)),
+    #("inventory", inventory_to_json(inventory)),
   ])
 }
 
@@ -97,6 +101,34 @@ pub fn skills_to_json(skills: Skills) -> Json {
     #("intelligence", json.int(intelligence)),
     #("charm", json.int(charm)),
   ])
+}
+
+pub fn inventory_to_json(inventory: Inventory) -> Json {
+  let state.Inventory(collected_weapons:, consumables:) = inventory
+  json.object([
+    #(
+      "collected_weapons",
+      json.array(collected_weapons |> set.to_list, weapon_id_to_json),
+    ),
+    #(
+      "consumables",
+      json.array(consumables |> dict.to_list, fn(pair) {
+        let #(consumable_id, count) = pair
+        json.object([
+          #("id", consumable_id_to_json(consumable_id)),
+          #("count", json.int(count)),
+        ])
+      }),
+    ),
+  ])
+}
+
+pub fn consumable_id_to_json(id: ConsumableId) -> Json {
+  case id {
+    state.EnergyDrink -> json.string("EnergyDrink")
+    state.SmallHealthPack -> json.string("SmallHealthPack")
+    state.BigHealthPack -> json.string("BigHealthPack")
+  }
 }
 
 pub fn fight_to_json(fight: Fight) -> Json {

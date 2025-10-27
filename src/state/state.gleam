@@ -1,7 +1,9 @@
 import env/enemy.{type Enemy}
 import env/world.{type LocationId}
+import gleam/dict.{type Dict}
 import gleam/int
 import gleam/option.{type Option}
+import gleam/set.{type Set}
 import state/toast.{type Toast}
 
 pub type State {
@@ -51,16 +53,30 @@ pub type Skills {
   Skills(strength: Int, dexterity: Int, intelligence: Int, charm: Int)
 }
 
+pub type ConsumableId {
+  EnergyDrink
+  SmallHealthPack
+  BigHealthPack
+}
+
+pub type Inventory {
+  Inventory(
+    collected_weapons: Set(WeaponId),
+    consumables: Dict(ConsumableId, Int),
+  )
+}
+
 pub type Player {
   Player(
     money: Money,
     health: Health,
     energy: Energy,
-    weapon: WeaponId,
+    equipped_weapon: WeaponId,
     location: LocationId,
     job: JobId,
     day_count: Int,
     skills: Skills,
+    inventory: Inventory,
   )
 }
 
@@ -121,6 +137,10 @@ pub fn add_stamina(current: Stamina, v: Int) -> Stamina {
   Stamina(current.v + v |> min_max(0, current.max), current.max)
 }
 
+pub fn refill_stamina(current: Stamina) {
+  Stamina(current.max, current.max)
+}
+
 // can go negative -> game-over condition
 pub fn add_health(current: Health, v: Int) -> Health {
   Health(current.v + v |> int.min(current.max), current.max)
@@ -147,8 +167,4 @@ pub fn get_skill(s: Skills, id: SkillId) -> Int {
     Intelligence -> s.intelligence
     Strength -> s.strength
   }
-}
-
-pub fn refill_stamina(current: Stamina) {
-  Stamina(current.max, current.max)
 }

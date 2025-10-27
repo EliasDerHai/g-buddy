@@ -1,11 +1,13 @@
 import env/enemy.{type Enemy, type EnemyId}
 import env/world.{type LocationId}
+import gleam/dict
 import gleam/dynamic/decode.{type Decoder}
 import gleam/option
+import gleam/set
 import state/state.{
-  type Energy, type Fight, type Health, type JobId, type Money, type Phase,
-  type Player, type SettingDisplay, type Settings, type Skills, type Stamina,
-  type State, type WeaponId,
+  type ConsumableId, type Energy, type Fight, type Health, type Inventory,
+  type JobId, type Money, type Phase, type Player, type SettingDisplay,
+  type Settings, type Skills, type Stamina, type State, type WeaponId,
 }
 
 pub fn state_decoder() -> Decoder(State) {
@@ -25,20 +27,22 @@ pub fn player_decoder() -> Decoder(Player) {
   use money <- decode.field("money", money_decoder())
   use health <- decode.field("health", health_decoder())
   use energy <- decode.field("energy", energy_decoder())
-  use weapon <- decode.field("weapon", weapon_id_decoder())
+  use equipped_weapon <- decode.field("weapon", weapon_id_decoder())
   use location <- decode.field("location", location_id_decoder())
   use job <- decode.field("job", job_id_decoder())
   use day_count <- decode.field("day_count", decode.int)
   use skills <- decode.field("skills", skills_decoder())
+  use inventory <- decode.field("inventory", inventory_decoder())
   decode.success(state.Player(
     money:,
     health:,
     energy:,
-    weapon:,
+    equipped_weapon:,
     location:,
     job:,
     day_count:,
     skills:,
+    inventory:,
   ))
 }
 
@@ -103,6 +107,38 @@ pub fn skills_decoder() -> Decoder(Skills) {
   use intelligence <- decode.field("intelligence", decode.int)
   use charm <- decode.field("charm", decode.int)
   decode.success(state.Skills(strength:, dexterity:, intelligence:, charm:))
+}
+
+pub fn inventory_decoder() -> Decoder(Inventory) {
+  use collected_weapons <- decode.field(
+    "collected_weapons",
+    decode.list(weapon_id_decoder()),
+  )
+  use consumables <- decode.field("consumables", decode.list(consumable_entry_decoder()))
+
+  let weapons_set = collected_weapons |> set.from_list
+  let consumables_dict = consumables |> dict.from_list
+
+  decode.success(state.Inventory(
+    collected_weapons: weapons_set,
+    consumables: consumables_dict,
+  ))
+}
+
+fn consumable_entry_decoder() -> Decoder(#(ConsumableId, Int)) {
+  use id <- decode.field("id", consumable_id_decoder())
+  use count <- decode.field("count", decode.int)
+  decode.success(#(id, count))
+}
+
+pub fn consumable_id_decoder() -> Decoder(ConsumableId) {
+  use str <- decode.then(decode.string)
+  case str {
+    "EnergyDrink" -> decode.success(state.EnergyDrink)
+    "SmallHealthPack" -> decode.success(state.SmallHealthPack)
+    "BigHealthPack" -> decode.success(state.BigHealthPack)
+    _ -> decode.failure(state.EnergyDrink, "Invalid ConsumableId: " <> str)
+  }
 }
 
 pub fn fight_decoder() -> Decoder(Fight) {

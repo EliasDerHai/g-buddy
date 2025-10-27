@@ -35,7 +35,7 @@ pub fn player_turn(state: State, move: FightMove) -> State {
         as "Illegal state - not enough stamina"
 
       let weapon.WeaponStat(id: _, dmg:, def: _, crit:) =
-        p.weapon |> weapon.weapon_stats
+        p.equipped_weapon |> weapon.weapon_stats
       let real_dmg = dmg_calc(dmg, crit, fight.enemy.def)
       let health = fight.enemy.health - real_dmg
       let stamina = fight.stamina |> state.add_stamina(-move.stamina_cost)
@@ -104,7 +104,7 @@ pub fn enemy_turn(state: State) -> State {
     as "Illegal state - fight move outside of fight"
 
   let enemy = fight.enemy
-  let w_stats = p.weapon |> weapon.weapon_stats
+  let w_stats = p.equipped_weapon |> weapon.weapon_stats
   let real_dmg = dmg_calc(enemy.dmg, enemy.crit, w_stats.def)
   let health = p.health |> state.add_health(-real_dmg)
 

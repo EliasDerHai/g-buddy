@@ -22,9 +22,19 @@ fn get_attack(id: AttackId) {
   case id {
     NormalBlow -> AttackMove(id:, requirements: [], stamina_cost: 35)
     KarateKick ->
-      AttackMove(id:, requirements: [#(state.Dexterity, 5)], stamina_cost: 45)
+      AttackMove(
+        id:,
+        //[#(state.Dexterity, 5)]
+        requirements: [],
+        stamina_cost: 45,
+      )
     PowerSlam ->
-      AttackMove(id:, requirements: [#(state.Strength, 5)], stamina_cost: 60)
+      AttackMove(
+        id:,
+        //[#(state.Strength, 5)]
+        requirements: [],
+        stamina_cost: 60,
+      )
   }
 }
 
