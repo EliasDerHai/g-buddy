@@ -4,29 +4,36 @@ import env/weapon.{BrassKnuckles, NoWeapon}
 import env/world.{type LocationId}
 import gleam/dict
 import gleam/dynamic/decode.{type Decoder}
-import gleam/option
 import gleam/set
 import state/state.{
-  type Energy, type Fight, type Health, type Inventory, type JobId, type Money,
-  type Phase, type Player, type SettingDisplay, type Settings, type Skills,
-  type Stamina, type State,
+  type Energy, type Fight, type GameState, type Health, type Inventory,
+  type JobId, type Money, type Phase, type Player, type SettingDisplay,
+  type Settings, type Skills, type Stamina,
 }
 
-pub fn state_decoder() -> Decoder(State) {
+pub fn settings_decoder() -> Decoder(Settings) {
+  use display <- decode.field("display", setting_display_decoder())
+  use autosave <- decode.field("autosave", decode.bool)
+  use autoload <- decode.field("autoload", decode.bool)
+  decode.success(state.Settings(display:, autosave:, autoload:))
+}
+
+fn setting_display_decoder() -> Decoder(SettingDisplay) {
+  use str <- decode.then(decode.string)
+  case str {
+    "Hidden" -> decode.success(state.Hidden)
+    "SaveLoad" -> decode.success(state.SaveLoad)
+    _ -> decode.failure(state.Hidden, "Invalid SettingDisplay: " <> str)
+  }
+}
+
+pub fn game_state_decoder() -> Decoder(GameState) {
   use p <- decode.field("p", player_decoder())
   use fight <- decode.field("fight", decode.optional(fight_decoder()))
-  use settings <- decode.field("settings", settings_decoder())
-  decode.success(state.State(
-    p:,
-    fight:,
-    buyables: [],
-    settings:,
-    toasts: [],
-    active_tooltip: option.None,
-  ))
+  decode.success(state.GameState(p:, fight:))
 }
 
-pub fn player_decoder() -> Decoder(Player) {
+fn player_decoder() -> Decoder(Player) {
   use money <- decode.field("money", money_decoder())
   use health <- decode.field("health", health_decoder())
   use energy <- decode.field("energy", energy_decoder())
@@ -49,30 +56,30 @@ pub fn player_decoder() -> Decoder(Player) {
   ))
 }
 
-pub fn money_decoder() -> Decoder(Money) {
+fn money_decoder() -> Decoder(Money) {
   use v <- decode.field("v", decode.int)
   decode.success(state.Money(v:))
 }
 
-pub fn health_decoder() -> Decoder(Health) {
+fn health_decoder() -> Decoder(Health) {
   use v <- decode.field("v", decode.int)
   use max <- decode.field("max", decode.int)
   decode.success(state.Health(v:, max:))
 }
 
-pub fn energy_decoder() -> Decoder(Energy) {
+fn energy_decoder() -> Decoder(Energy) {
   use v <- decode.field("v", decode.int)
   use max <- decode.field("max", decode.int)
   decode.success(state.Energy(v:, max:))
 }
 
-pub fn stamina_decoder() -> Decoder(Stamina) {
+fn stamina_decoder() -> Decoder(Stamina) {
   use v <- decode.field("v", decode.int)
   use max <- decode.field("max", decode.int)
   decode.success(state.Stamina(v:, max:))
 }
 
-pub fn weapon_id_decoder() -> Decoder(weapon.WeaponId) {
+fn weapon_id_decoder() -> Decoder(weapon.WeaponId) {
   use str <- decode.then(decode.string)
   case str {
     "NoWeapon" -> decode.success(NoWeapon)
@@ -81,7 +88,7 @@ pub fn weapon_id_decoder() -> Decoder(weapon.WeaponId) {
   }
 }
 
-pub fn location_id_decoder() -> Decoder(LocationId) {
+fn location_id_decoder() -> Decoder(LocationId) {
   use str <- decode.then(decode.string)
   case str {
     "NoLocation" -> decode.success(world.NoLocation)
@@ -95,7 +102,7 @@ pub fn location_id_decoder() -> Decoder(LocationId) {
   }
 }
 
-pub fn job_id_decoder() -> Decoder(JobId) {
+fn job_id_decoder() -> Decoder(JobId) {
   use str <- decode.then(decode.string)
   case str {
     "Lookout" -> decode.success(state.Lookout)
@@ -104,7 +111,7 @@ pub fn job_id_decoder() -> Decoder(JobId) {
   }
 }
 
-pub fn skills_decoder() -> Decoder(Skills) {
+fn skills_decoder() -> Decoder(Skills) {
   use strength <- decode.field("strength", decode.int)
   use dexterity <- decode.field("dexterity", decode.int)
   use intelligence <- decode.field("intelligence", decode.int)
@@ -112,7 +119,7 @@ pub fn skills_decoder() -> Decoder(Skills) {
   decode.success(state.Skills(strength:, dexterity:, intelligence:, charm:))
 }
 
-pub fn inventory_decoder() -> Decoder(Inventory) {
+fn inventory_decoder() -> Decoder(Inventory) {
   use collected_weapons <- decode.field(
     "collected_weapons",
     decode.list(weapon_id_decoder()),
@@ -137,7 +144,7 @@ fn consumable_entry_decoder() -> Decoder(#(shop.ConsumableId, Int)) {
   decode.success(#(id, count))
 }
 
-pub fn consumable_id_decoder() -> Decoder(shop.ConsumableId) {
+fn consumable_id_decoder() -> Decoder(shop.ConsumableId) {
   use str <- decode.then(decode.string)
   case str {
     "EnergyDrink" -> decode.success(shop.EnergyDrink)
@@ -147,7 +154,7 @@ pub fn consumable_id_decoder() -> Decoder(shop.ConsumableId) {
   }
 }
 
-pub fn fight_decoder() -> Decoder(Fight) {
+fn fight_decoder() -> Decoder(Fight) {
   use phase <- decode.field("phase", phase_decoder())
   use enemy <- decode.field("enemy", enemy_decoder())
   use stamina <- decode.field("stamina", stamina_decoder())
@@ -170,7 +177,7 @@ pub fn fight_decoder() -> Decoder(Fight) {
   ))
 }
 
-pub fn phase_decoder() -> Decoder(Phase) {
+fn phase_decoder() -> Decoder(Phase) {
   use str <- decode.then(decode.string)
   case str {
     "PlayerTurn" -> decode.success(state.PlayerTurn)
@@ -182,7 +189,7 @@ pub fn phase_decoder() -> Decoder(Phase) {
   }
 }
 
-pub fn enemy_decoder() -> Decoder(Enemy) {
+fn enemy_decoder() -> Decoder(Enemy) {
   use id <- decode.field("id", enemy_id_decoder())
   use dmg <- decode.field("dmg", decode.int)
   use def <- decode.field("def", decode.int)
@@ -192,27 +199,11 @@ pub fn enemy_decoder() -> Decoder(Enemy) {
   decode.success(enemy.Enemy(id:, dmg:, def:, crit:, health:, energy:))
 }
 
-pub fn enemy_id_decoder() -> Decoder(EnemyId) {
+fn enemy_id_decoder() -> Decoder(EnemyId) {
   use str <- decode.then(decode.string)
   case str {
     "Lvl1" -> decode.success(enemy.Lvl1)
     "Lvl2" -> decode.success(enemy.Lvl2)
     _ -> decode.failure(enemy.Lvl1, "Invalid EnemyId: " <> str)
-  }
-}
-
-pub fn settings_decoder() -> Decoder(Settings) {
-  use display <- decode.field("display", setting_display_decoder())
-  use autosave <- decode.field("autosave", decode.bool)
-  use autoload <- decode.field("autoload", decode.bool)
-  decode.success(state.Settings(display:, autosave:, autoload:))
-}
-
-pub fn setting_display_decoder() -> Decoder(SettingDisplay) {
-  use str <- decode.then(decode.string)
-  case str {
-    "Hidden" -> decode.success(state.Hidden)
-    "SaveLoad" -> decode.success(state.SaveLoad)
-    _ -> decode.failure(state.Hidden, "Invalid SettingDisplay: " <> str)
   }
 }

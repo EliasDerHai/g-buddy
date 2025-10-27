@@ -95,7 +95,7 @@ pub type Phase {
   PlayerFled
 }
 
-// settings 
+// settings
 pub type SettingDisplay {
   Hidden
   SaveLoad
@@ -103,6 +103,11 @@ pub type SettingDisplay {
 
 pub type Settings {
   Settings(display: SettingDisplay, autosave: Bool, autoload: Bool)
+}
+
+// persistence
+pub type GameState {
+  GameState(p: Player, fight: Option(Fight))
 }
 
 // INIT -------------------------------------------------

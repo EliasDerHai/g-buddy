@@ -40,16 +40,21 @@ fn init() -> State {
   let new_state = init.new_state_fight()
   // let new_state = init.new_state()
 
-  case localstore.try_load() {
-    Some(last) -> {
-      case last.settings.autoload {
-        True -> last
-        // copy over 'last' settings (otherwise autoload and autosave would get reseted)
-        False -> State(..new_state, settings: last.settings)
+  let settings =
+    localstore.try_load_settings()
+    |> option.unwrap(new_state.settings)
+
+  let #(p, fight) = case settings.autoload {
+    False -> #(new_state.p, new_state.fight)
+    True -> {
+      case localstore.try_load_game_state() {
+        Some(state.GameState(p:, fight:)) -> #(p, fight)
+        None -> #(new_state.p, new_state.fight)
       }
     }
-    None -> new_state
   }
+
+  State(p:, fight:, buyables: [], settings:, toasts: [], active_tooltip: None)
 }
 
 fn setup_keyboard_listener() -> Effect(Msg) {
@@ -75,7 +80,7 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.ToastChange(msg) -> handle_toast(state, msg)
     msg.TooltipChange(msg) -> handle_tooltip(state, msg)
   }
-  |> pair.map_first(try_save_state_to_localstore(msg, _))
+  |> pair.map_first(try_save_to_localstore(msg, _))
 }
 
 fn handle_shop(state: State, shop: PlayerShopMsg) -> #(State, Effect(Msg)) {
@@ -229,19 +234,22 @@ fn handle_tooltip(state: State, msg: TooltipMsg) -> #(State, Effect(Msg)) {
   }
 }
 
-fn try_save_state_to_localstore(msg: Msg, state: State) {
+fn try_save_to_localstore(msg: Msg, state: State) -> State {
   case msg {
+    msg.SettingChange(msg) if msg != msg.SettingReset -> {
+      localstore.try_save_settings(state.settings)
+      state
+    }
     msg.PlayerAction(_)
       | msg.PlayerWork
       | msg.PlayerMove(_)
       | msg.PlayerFightMove(_)
+      | msg.PlayerShop(_)
       if state.settings.autosave
-    -> localstore.try_save(state)
-    // FIXME: storing autoload/autosave with state is inevitably a bit broken - options:
-    // - split into different fields on localstore (clean)
-    // - check current persistent state (patch settings, fallback init_state) (bit hacky)
-    msg.SettingChange(msg) if msg != msg.SettingReset ->
-      localstore.try_save(state)
+    -> {
+      localstore.try_save_game_state(state.p, state.fight)
+      state
+    }
     _ -> state
   }
 }

@@ -8,31 +8,36 @@ import gleam/option.{None, Some}
 import gleam/set
 import gleam/string
 import state/state.{
-  type Energy, type Fight, type Health, type Inventory, type JobId, type Money,
-  type Phase, type Player, type SettingDisplay, type Settings, type Skills,
-  type Stamina, type State,
+  type Energy, type Fight, type GameState, type Health, type Inventory,
+  type JobId, type Money, type Phase, type Player, type SettingDisplay,
+  type Settings, type Skills, type Stamina,
 }
 
-pub fn state_to_json(state: State) -> Json {
-  let state.State(
-    p:,
-    fight:,
-    buyables: _,
-    settings:,
-    toasts: _,
-    active_tooltip: _,
-  ) = state
+pub fn settings_to_json(settings: Settings) -> Json {
+  let state.Settings(display:, autosave:, autoload:) = settings
+  json.object([
+    #("display", setting_display_to_json(display)),
+    #("autosave", json.bool(autosave)),
+    #("autoload", json.bool(autoload)),
+  ])
+}
+
+fn setting_display_to_json(display: SettingDisplay) -> Json {
+  display |> string.inspect |> json.string
+}
+
+pub fn game_state_to_json(game_state: GameState) -> Json {
+  let state.GameState(p:, fight:) = game_state
   json.object([
     #("p", player_to_json(p)),
     #("fight", case fight {
       None -> json.null()
       Some(value) -> fight_to_json(value)
     }),
-    #("settings", settings_to_json(settings)),
   ])
 }
 
-pub fn player_to_json(player: Player) -> Json {
+fn player_to_json(player: Player) -> Json {
   let state.Player(
     money:,
     health:,
@@ -57,39 +62,39 @@ pub fn player_to_json(player: Player) -> Json {
   ])
 }
 
-pub fn money_to_json(money: Money) -> Json {
+fn money_to_json(money: Money) -> Json {
   let state.Money(v:) = money
   json.object([#("v", json.int(v))])
 }
 
-pub fn health_to_json(health: Health) -> Json {
+fn health_to_json(health: Health) -> Json {
   let state.Health(v:, max:) = health
   json.object([#("v", json.int(v)), #("max", json.int(max))])
 }
 
-pub fn energy_to_json(energy: Energy) -> Json {
+fn energy_to_json(energy: Energy) -> Json {
   let state.Energy(v:, max:) = energy
   json.object([#("v", json.int(v)), #("max", json.int(max))])
 }
 
-pub fn stamina_to_json(stamina: Stamina) -> Json {
+fn stamina_to_json(stamina: Stamina) -> Json {
   let state.Stamina(v:, max:) = stamina
   json.object([#("v", json.int(v)), #("max", json.int(max))])
 }
 
-pub fn weapon_id_to_json(weapon: WeaponId) -> Json {
+fn weapon_id_to_json(weapon: WeaponId) -> Json {
   weapon |> string.inspect |> json.string
 }
 
-pub fn location_id_to_json(location: LocationId) -> Json {
+fn location_id_to_json(location: LocationId) -> Json {
   location |> string.inspect |> json.string
 }
 
-pub fn job_id_to_json(job: JobId) -> Json {
+fn job_id_to_json(job: JobId) -> Json {
   job |> string.inspect |> json.string
 }
 
-pub fn skills_to_json(skills: Skills) -> Json {
+fn skills_to_json(skills: Skills) -> Json {
   let state.Skills(strength:, dexterity:, intelligence:, charm:) = skills
   json.object([
     #("strength", json.int(strength)),
@@ -99,7 +104,7 @@ pub fn skills_to_json(skills: Skills) -> Json {
   ])
 }
 
-pub fn inventory_to_json(inventory: Inventory) -> Json {
+fn inventory_to_json(inventory: Inventory) -> Json {
   let state.Inventory(collected_weapons:, consumables:) = inventory
   json.object([
     #(
@@ -119,11 +124,11 @@ pub fn inventory_to_json(inventory: Inventory) -> Json {
   ])
 }
 
-pub fn consumable_id_to_json(id: ConsumableId) -> Json {
+fn consumable_id_to_json(id: ConsumableId) -> Json {
   id |> string.inspect |> json.string
 }
 
-pub fn fight_to_json(fight: Fight) -> Json {
+fn fight_to_json(fight: Fight) -> Json {
   let state.Fight(
     phase:,
     enemy:,
@@ -148,11 +153,11 @@ pub fn fight_to_json(fight: Fight) -> Json {
   ])
 }
 
-pub fn phase_to_json(phase: Phase) -> Json {
+fn phase_to_json(phase: Phase) -> Json {
   phase |> string.inspect |> json.string
 }
 
-pub fn enemy_to_json(enemy: Enemy) -> Json {
+fn enemy_to_json(enemy: Enemy) -> Json {
   let enemy.Enemy(id:, dmg:, def:, crit:, health:, energy:) = enemy
   json.object([
     #("id", enemy_id_to_json(id)),
@@ -164,19 +169,6 @@ pub fn enemy_to_json(enemy: Enemy) -> Json {
   ])
 }
 
-pub fn enemy_id_to_json(id: EnemyId) -> Json {
+fn enemy_id_to_json(id: EnemyId) -> Json {
   id |> string.inspect |> json.string
-}
-
-pub fn settings_to_json(settings: Settings) -> Json {
-  let state.Settings(display:, autosave:, autoload:) = settings
-  json.object([
-    #("display", setting_display_to_json(display)),
-    #("autosave", json.bool(autosave)),
-    #("autoload", json.bool(autoload)),
-  ])
-}
-
-pub fn setting_display_to_json(display: SettingDisplay) -> Json {
-  display |> string.inspect |> json.string
 }
