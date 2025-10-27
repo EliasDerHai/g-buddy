@@ -1,10 +1,11 @@
-import env/action
-import env/attack
-import env/enemy
+import env/action.{type ActionId}
+import env/attack.{type AttackId}
+import env/enemy.{type EnemyId}
+import env/weapon.{type WeaponId}
 import env/world.{type LocationId}
 import gleam/int
-import state/check
-import state/state
+import state/check.{type DeniedReason}
+import state/state.{type JobId}
 
 pub fn location(id: LocationId) -> String {
   case id {
@@ -15,31 +16,33 @@ pub fn location(id: LocationId) -> String {
     world.SlingerCorner -> "Slinger Corner"
     world.CityCenter -> "City Center"
     world.Gym -> "Gym"
+    world.Arms -> "Arms & Ammu"
+    world.GasStation -> "Gas station"
   }
 }
 
-pub fn weapon(id: state.WeaponId) -> String {
+pub fn weapon(id: WeaponId) -> String {
   case id {
-    state.NoWeapon -> "Fists"
-    state.BrassKnuckles -> "Brass Knuckles"
+    weapon.NoWeapon -> "Fists"
+    weapon.BrassKnuckles -> "Brass Knuckles"
   }
 }
 
-pub fn job(id: state.JobId) -> String {
+pub fn job(id: JobId) -> String {
   case id {
     state.Lookout -> "Lookout"
     state.Slinger -> "Slinger"
   }
 }
 
-pub fn enemy(id: enemy.EnemyId) -> String {
+pub fn enemy(id: EnemyId) -> String {
   case id {
     enemy.Lvl1 -> "Drunkard"
     enemy.Lvl2 -> "Goon"
   }
 }
 
-pub fn action(id: action.ActionId) {
+pub fn action(id: ActionId) {
   case id {
     action.BusTo(dest) ->
       "Bus to "
@@ -50,7 +53,7 @@ pub fn action(id: action.ActionId) {
   }
 }
 
-pub fn disabled_reason(id: check.DeniedReason) -> String {
+pub fn disabled_reason(id: DeniedReason) -> String {
   case id {
     check.Insufficient(action.Energy(cost:)) ->
       "Not enough energy (requires ⚡️" <> cost |> int.to_string <> ")"
@@ -59,7 +62,7 @@ pub fn disabled_reason(id: check.DeniedReason) -> String {
   }
 }
 
-pub fn attack(id: attack.AttackId) -> String {
+pub fn attack(id: AttackId) -> String {
   case id {
     attack.NormalBlow -> "Normal Blow"
     attack.PowerSlam -> "Power Slam"

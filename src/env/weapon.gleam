@@ -1,5 +1,11 @@
 import gleam/string
-import state/state.{type WeaponId}
+
+pub type WeaponId {
+  NoWeapon
+  BrassKnuckles
+}
+
+pub const all_weapons = [NoWeapon, BrassKnuckles]
 
 pub type WeaponStat {
   WeaponStat(id: WeaponId, dmg: Int, def: Int, crit: Float)
@@ -7,8 +13,8 @@ pub type WeaponStat {
 
 pub fn weapon_stats(id: WeaponId) {
   case id {
-    state.NoWeapon -> WeaponStat(id, dmg: 2, def: 1, crit: 0.0)
-    state.BrassKnuckles -> WeaponStat(id, dmg: 3, def: 1, crit: 0.05)
+    NoWeapon -> WeaponStat(id, dmg: 2, def: 0, crit: 0.0)
+    BrassKnuckles -> WeaponStat(id, dmg: 3, def: 0, crit: 0.05)
   }
   |> assert_bounds
 }

@@ -139,8 +139,6 @@ pub fn custom_button(config: ButtonConfig) -> Element(Msg) {
   case disabled_reason {
     None -> button_element
     Some(reason) -> html.span([attribute.title(reason)], [button_element])
-    // TODO: use tooltip_top instead of attribute.title
-    //tooltip.tooltip_top(button_element, Some(reason), )  // 
   }
 }
 

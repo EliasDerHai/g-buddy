@@ -1,11 +1,12 @@
 import env/enemy.{Lvl1}
+import env/weapon.{NoWeapon}
 import env/world.{Apartment}
 import gleam/dict
 import gleam/option.{None, Some}
 import gleam/set
 import state/state.{
-  Energy, Fight, Health, Inventory, Lookout, Money, NoWeapon, Player, PlayerTurn,
-  Skills, State,
+  Energy, Fight, Health, Inventory, Lookout, Money, Player, PlayerTurn, Skills,
+  State,
 }
 
 pub fn new_state() {

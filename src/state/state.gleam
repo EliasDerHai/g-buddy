@@ -1,4 +1,6 @@
 import env/enemy.{type Enemy}
+import env/shop
+import env/weapon
 import env/world.{type LocationId}
 import gleam/dict.{type Dict}
 import gleam/int
@@ -18,11 +20,6 @@ pub type State {
 
 pub type Money {
   Money(v: Int)
-}
-
-pub type WeaponId {
-  NoWeapon
-  BrassKnuckles
 }
 
 pub type Health {
@@ -53,16 +50,10 @@ pub type Skills {
   Skills(strength: Int, dexterity: Int, intelligence: Int, charm: Int)
 }
 
-pub type ConsumableId {
-  EnergyDrink
-  SmallHealthPack
-  BigHealthPack
-}
-
 pub type Inventory {
   Inventory(
-    collected_weapons: Set(WeaponId),
-    consumables: Dict(ConsumableId, Int),
+    collected_weapons: Set(weapon.WeaponId),
+    consumables: Dict(shop.ConsumableId, Int),
   )
 }
 
@@ -71,7 +62,7 @@ pub type Player {
     money: Money,
     health: Health,
     energy: Energy,
-    equipped_weapon: WeaponId,
+    equipped_weapon: weapon.WeaponId,
     location: LocationId,
     job: JobId,
     day_count: Int,

@@ -1,13 +1,15 @@
 import env/enemy.{type Enemy, type EnemyId}
+import env/shop.{type ConsumableId}
+import env/weapon.{type WeaponId}
 import env/world.{type LocationId}
 import gleam/dict
 import gleam/json.{type Json}
 import gleam/option.{None, Some}
 import gleam/set
 import state/state.{
-  type ConsumableId, type Energy, type Fight, type Health, type Inventory,
-  type JobId, type Money, type Phase, type Player, type SettingDisplay,
-  type Settings, type Skills, type Stamina, type State, type WeaponId,
+  type Energy, type Fight, type Health, type Inventory, type JobId, type Money,
+  type Phase, type Player, type SettingDisplay, type Settings, type Skills,
+  type Stamina, type State,
 }
 
 pub fn state_to_json(state: State) -> Json {
@@ -69,8 +71,8 @@ pub fn stamina_to_json(stamina: Stamina) -> Json {
 
 pub fn weapon_id_to_json(weapon: WeaponId) -> Json {
   case weapon {
-    state.NoWeapon -> json.string("NoWeapon")
-    state.BrassKnuckles -> json.string("BrassKnuckles")
+    weapon.NoWeapon -> json.string("NoWeapon")
+    weapon.BrassKnuckles -> json.string("BrassKnuckles")
   }
 }
 
@@ -83,6 +85,8 @@ pub fn location_id_to_json(location: LocationId) -> Json {
     world.SlingerCorner -> json.string("SlingerCorner")
     world.CityCenter -> json.string("CityCenter")
     world.Gym -> json.string("Gym")
+    world.Arms -> json.string("Arms")
+    world.GasStation -> json.string("GasStation")
   }
 }
 
@@ -125,9 +129,9 @@ pub fn inventory_to_json(inventory: Inventory) -> Json {
 
 pub fn consumable_id_to_json(id: ConsumableId) -> Json {
   case id {
-    state.EnergyDrink -> json.string("EnergyDrink")
-    state.SmallHealthPack -> json.string("SmallHealthPack")
-    state.BigHealthPack -> json.string("BigHealthPack")
+    shop.EnergyDrink -> json.string("EnergyDrink")
+    shop.SmallHealthPack -> json.string("SmallHealthPack")
+    shop.BigHealthPack -> json.string("BigHealthPack")
   }
 }
 

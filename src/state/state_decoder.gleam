@@ -1,13 +1,15 @@
 import env/enemy.{type Enemy, type EnemyId}
+import env/shop
+import env/weapon.{BrassKnuckles, NoWeapon}
 import env/world.{type LocationId}
 import gleam/dict
 import gleam/dynamic/decode.{type Decoder}
 import gleam/option
 import gleam/set
 import state/state.{
-  type ConsumableId, type Energy, type Fight, type Health, type Inventory,
-  type JobId, type Money, type Phase, type Player, type SettingDisplay,
-  type Settings, type Skills, type Stamina, type State, type WeaponId,
+  type Energy, type Fight, type Health, type Inventory, type JobId, type Money,
+  type Phase, type Player, type SettingDisplay, type Settings, type Skills,
+  type Stamina, type State,
 }
 
 pub fn state_decoder() -> Decoder(State) {
@@ -69,12 +71,12 @@ pub fn stamina_decoder() -> Decoder(Stamina) {
   decode.success(state.Stamina(v:, max:))
 }
 
-pub fn weapon_id_decoder() -> Decoder(WeaponId) {
+pub fn weapon_id_decoder() -> Decoder(weapon.WeaponId) {
   use str <- decode.then(decode.string)
   case str {
-    "NoWeapon" -> decode.success(state.NoWeapon)
-    "BrassKnuckles" -> decode.success(state.BrassKnuckles)
-    _ -> decode.failure(state.NoWeapon, "Invalid WeaponId: " <> str)
+    "NoWeapon" -> decode.success(NoWeapon)
+    "BrassKnuckles" -> decode.success(BrassKnuckles)
+    _ -> decode.failure(NoWeapon, "Invalid WeaponId: " <> str)
   }
 }
 
@@ -114,7 +116,10 @@ pub fn inventory_decoder() -> Decoder(Inventory) {
     "collected_weapons",
     decode.list(weapon_id_decoder()),
   )
-  use consumables <- decode.field("consumables", decode.list(consumable_entry_decoder()))
+  use consumables <- decode.field(
+    "consumables",
+    decode.list(consumable_entry_decoder()),
+  )
 
   let weapons_set = collected_weapons |> set.from_list
   let consumables_dict = consumables |> dict.from_list
@@ -125,19 +130,19 @@ pub fn inventory_decoder() -> Decoder(Inventory) {
   ))
 }
 
-fn consumable_entry_decoder() -> Decoder(#(ConsumableId, Int)) {
+fn consumable_entry_decoder() -> Decoder(#(shop.ConsumableId, Int)) {
   use id <- decode.field("id", consumable_id_decoder())
   use count <- decode.field("count", decode.int)
   decode.success(#(id, count))
 }
 
-pub fn consumable_id_decoder() -> Decoder(ConsumableId) {
+pub fn consumable_id_decoder() -> Decoder(shop.ConsumableId) {
   use str <- decode.then(decode.string)
   case str {
-    "EnergyDrink" -> decode.success(state.EnergyDrink)
-    "SmallHealthPack" -> decode.success(state.SmallHealthPack)
-    "BigHealthPack" -> decode.success(state.BigHealthPack)
-    _ -> decode.failure(state.EnergyDrink, "Invalid ConsumableId: " <> str)
+    "EnergyDrink" -> decode.success(shop.EnergyDrink)
+    "SmallHealthPack" -> decode.success(shop.SmallHealthPack)
+    "BigHealthPack" -> decode.success(shop.BigHealthPack)
+    _ -> decode.failure(shop.EnergyDrink, "Invalid ConsumableId: " <> str)
   }
 }
 
