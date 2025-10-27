@@ -19,7 +19,7 @@ pub fn state_decoder() -> Decoder(State) {
   decode.success(state.State(
     p:,
     fight:,
-    buyables: todo,
+    buyables: [],
     settings:,
     toasts: [],
     active_tooltip: option.None,

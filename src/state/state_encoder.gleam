@@ -6,6 +6,7 @@ import gleam/dict
 import gleam/json.{type Json}
 import gleam/option.{None, Some}
 import gleam/set
+import gleam/string
 import state/state.{
   type Energy, type Fight, type Health, type Inventory, type JobId, type Money,
   type Phase, type Player, type SettingDisplay, type Settings, type Skills,
@@ -16,7 +17,7 @@ pub fn state_to_json(state: State) -> Json {
   let state.State(
     p:,
     fight:,
-    buyables:,
+    buyables: _,
     settings:,
     toasts: _,
     active_tooltip: _,
@@ -77,31 +78,15 @@ pub fn stamina_to_json(stamina: Stamina) -> Json {
 }
 
 pub fn weapon_id_to_json(weapon: WeaponId) -> Json {
-  case weapon {
-    weapon.NoWeapon -> json.string("NoWeapon")
-    weapon.BrassKnuckles -> json.string("BrassKnuckles")
-  }
+  weapon |> string.inspect |> json.string
 }
 
 pub fn location_id_to_json(location: LocationId) -> Json {
-  case location {
-    world.NoLocation -> json.string("NoLocation")
-    world.Apartment -> json.string("Apartment")
-    world.Neighbor -> json.string("Neighbor")
-    world.BusStop -> json.string("BusStop")
-    world.SlingerCorner -> json.string("SlingerCorner")
-    world.CityCenter -> json.string("CityCenter")
-    world.Gym -> json.string("Gym")
-    world.Arms -> json.string("Arms")
-    world.GasStation -> json.string("GasStation")
-  }
+  location |> string.inspect |> json.string
 }
 
 pub fn job_id_to_json(job: JobId) -> Json {
-  case job {
-    state.Lookout -> json.string("Lookout")
-    state.Slinger -> json.string("Slinger")
-  }
+  job |> string.inspect |> json.string
 }
 
 pub fn skills_to_json(skills: Skills) -> Json {
@@ -135,11 +120,7 @@ pub fn inventory_to_json(inventory: Inventory) -> Json {
 }
 
 pub fn consumable_id_to_json(id: ConsumableId) -> Json {
-  case id {
-    shop.EnergyDrink -> json.string("EnergyDrink")
-    shop.SmallHealthPack -> json.string("SmallHealthPack")
-    shop.BigHealthPack -> json.string("BigHealthPack")
-  }
+  id |> string.inspect |> json.string
 }
 
 pub fn fight_to_json(fight: Fight) -> Json {
@@ -168,13 +149,7 @@ pub fn fight_to_json(fight: Fight) -> Json {
 }
 
 pub fn phase_to_json(phase: Phase) -> Json {
-  case phase {
-    state.PlayerTurn -> json.string("PlayerTurn")
-    state.EnemyTurn -> json.string("EnemyTurn")
-    state.PlayerWon -> json.string("PlayerWon")
-    state.EnemyWon -> json.string("EnemyWon")
-    state.PlayerFled -> json.string("PlayerFled")
-  }
+  phase |> string.inspect |> json.string
 }
 
 pub fn enemy_to_json(enemy: Enemy) -> Json {
@@ -190,10 +165,7 @@ pub fn enemy_to_json(enemy: Enemy) -> Json {
 }
 
 pub fn enemy_id_to_json(id: EnemyId) -> Json {
-  case id {
-    enemy.Lvl1 -> json.string("Lvl1")
-    enemy.Lvl2 -> json.string("Lvl2")
-  }
+  id |> string.inspect |> json.string
 }
 
 pub fn settings_to_json(settings: Settings) -> Json {
@@ -206,8 +178,5 @@ pub fn settings_to_json(settings: Settings) -> Json {
 }
 
 pub fn setting_display_to_json(display: SettingDisplay) -> Json {
-  case display {
-    state.Hidden -> json.string("Hidden")
-    state.SaveLoad -> json.string("SaveLoad")
-  }
+  display |> string.inspect |> json.string
 }

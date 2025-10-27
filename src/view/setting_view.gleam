@@ -7,9 +7,7 @@ import view/generic_view
 
 pub fn view_settings(s: State) -> List(Element(Msg)) {
   [
-    html.h2([attribute.class("text-2xl font-bold mb-6")], [
-      html.text("Settings"),
-    ]),
+    "Settings" |> generic_view.heading,
     html.div([attribute.class("flex flex-col gap-4")], [
       setting_toggle(
         "Autosave",

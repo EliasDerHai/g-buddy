@@ -24,9 +24,7 @@ pub fn view_fight(state: State, fight: Fight) -> List(Element(Msg)) {
   let p = state.p
 
   [
-    html.h2([attribute.class("text-2xl font-bold mb-4")], [
-      html.text("Fight!"),
-    ]),
+    "Fight!" |> generic_view.heading,
     // Stats
     html.div([attribute.class("flex justify-between mb-6")], [
       html.div(

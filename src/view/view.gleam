@@ -106,6 +106,7 @@ fn view_right_hud(model: State) -> List(Element(Msg)) {
 fn view_navigation_buttons(state: State) -> List(Element(Msg)) {
   let location = world.get_location(state.p.location)
   let buyables = state.p.location |> shop.buyables
+
   let #(n, e, s, w) = location.connections
 
   [

@@ -148,6 +148,10 @@ pub fn simple_text(t: String) -> Element(a) {
   html.span([], [html.text(t)])
 }
 
+pub fn heading(t: String) {
+  html.h2([attribute.class("text-2xl font-bold mb-4")], [html.text(t)])
+}
+
 pub fn toggle_button(active: Bool, on_toggle: Msg) -> Element(Msg) {
   let toggle_bg = case active {
     True -> "bg-blue-600"

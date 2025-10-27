@@ -1,6 +1,7 @@
 import env/action.{type ActionId}
 import env/attack.{type AttackId}
 import env/enemy.{type EnemyId}
+import env/shop.{type ConsumableId}
 import env/weapon.{type WeaponId}
 import env/world.{type LocationId}
 import gleam/int
@@ -67,5 +68,13 @@ pub fn attack(id: AttackId) -> String {
     attack.NormalBlow -> "Normal Blow"
     attack.PowerSlam -> "Power Slam"
     attack.KarateKick -> "Karate Kick"
+  }
+}
+
+pub fn consumable(id: ConsumableId) -> String {
+  case id {
+    shop.EnergyDrink -> "Energy Drink"
+    shop.SmallHealthPack -> "Small Health Pack"
+    shop.BigHealthPack -> "Big Health Pack"
   }
 }

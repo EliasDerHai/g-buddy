@@ -14,7 +14,7 @@ import lustre
 import lustre/effect.{type Effect}
 import msg.{
   type FightMove, type KeyboardEvent, type Msg, type PlayerShopMsg,
-  type SettingMsg, type ToastMsg,
+  type SettingMsg, type ToastMsg, type TooltipMsg,
 }
 import plinth/browser/document
 import plinth/browser/event
@@ -222,7 +222,7 @@ fn handle_toast(state: State, msg: ToastMsg) -> #(State, Effect(Msg)) {
   }
 }
 
-fn handle_tooltip(state: State, msg: msg.TooltipMsg) -> #(State, Effect(Msg)) {
+fn handle_tooltip(state: State, msg: TooltipMsg) -> #(State, Effect(Msg)) {
   case msg {
     msg.TooltipShow(id) -> State(..state, active_tooltip: Some(id)) |> no_eff
     msg.TooltipHide -> State(..state, active_tooltip: None) |> no_eff
@@ -240,7 +240,8 @@ fn try_save_state_to_localstore(msg: Msg, state: State) {
     // FIXME: storing autoload/autosave with state is inevitably a bit broken - options:
     // - split into different fields on localstore (clean)
     // - check current persistent state (patch settings, fallback init_state) (bit hacky)
-    msg.SettingChange(_) -> localstore.try_save(state)
+    msg.SettingChange(msg) if msg != msg.SettingReset ->
+      localstore.try_save(state)
     _ -> state
   }
 }

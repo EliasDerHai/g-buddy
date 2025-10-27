@@ -1,5 +1,5 @@
 import env/weapon.{type WeaponId}
-import env/world.{type LocationId, NoLocation}
+import env/world.{type LocationId, Arms, GasStation}
 import gleam/list
 import util/either.{type Either}
 
@@ -18,7 +18,11 @@ pub type Buyable {
 pub fn buyables(location: LocationId) -> List(Buyable) {
   all_consumables
   |> list.map(either.from_right)
-  |> list.append(weapon.all_weapons |> list.map(either.from_left))
+  |> list.append(
+    weapon.all_weapons
+    |> list.filter(fn(el) { el != weapon.NoWeapon })
+    |> list.map(either.from_left),
+  )
   |> list.map(buyables_by_id)
   |> list.filter(fn(b) { b.shop == location })
 }
@@ -35,8 +39,8 @@ fn weapon_sale(id: WeaponId) -> Buyable {
     Buyable(id: either.from_left(id), price:, shop:)
   }
   case id {
-    weapon.NoWeapon -> b(0, NoLocation)
-    weapon.BrassKnuckles -> b(300, NoLocation)
+    weapon.NoWeapon -> b(0, Arms)
+    weapon.BrassKnuckles -> b(300, Arms)
   }
 }
 
@@ -45,8 +49,8 @@ fn consumable_sale(id: ConsumableId) -> Buyable {
     Buyable(id: either.from_right(id), price:, shop:)
   }
   case id {
-    EnergyDrink -> b(10, NoLocation)
-    SmallHealthPack -> b(10, NoLocation)
-    BigHealthPack -> b(10, NoLocation)
+    EnergyDrink -> b(10, GasStation)
+    SmallHealthPack -> b(10, GasStation)
+    BigHealthPack -> b(10, GasStation)
   }
 }
