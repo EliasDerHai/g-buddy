@@ -20,7 +20,7 @@ import plinth/browser/document
 import plinth/browser/event
 import state/check
 import state/init
-import state/state.{type Player, type State, GameState, Inventory, Player, State}
+import state/state.{type State, GameState, Inventory, Player, State}
 import state/toast
 import util/either.{Left, Right}
 import util/localstore
@@ -85,12 +85,24 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
   |> pair.map_first(try_save_to_localstore(msg, _))
 }
 
-fn handle_move(state: State, location: LocationId) -> #(State, Effect(a)) {
-  set_p(state, Player(..state.p, location:))
-  |> no_eff
+fn handle_move(state: State, location: LocationId) -> #(State, Effect(Msg)) {
+  let gs =
+    location
+    |> world.random_location_trouble
+    |> option.map(fn(e_id) { fight.start_fight(e_id, state.p) })
+
+  case gs {
+    Some(GameState(p:, fight:)) -> #(
+      State(..state, p: Player(..p, location:), fight:),
+      toast_effect("Random streetfight occurred!"),
+    )
+    None ->
+      State(..state, p: Player(..state.p, location:))
+      |> no_eff
+  }
 }
 
-fn handle_keyboard(state: State, ev: KeyboardEvent) -> #(State, Effect(a)) {
+fn handle_keyboard(state: State, ev: KeyboardEvent) -> #(State, Effect(Msg)) {
   let location = world.get_location(state.p.location)
   let #(n, e, s, w) = location.connections
 
@@ -119,7 +131,7 @@ fn handle_fight_move(state: State, move: FightMove) -> #(State, Effect(a)) {
   State(..state, p:, fight:) |> no_eff
 }
 
-fn handle_work(state: State) -> #(State, Effect(a)) {
+fn handle_work(state: State) -> #(State, Effect(Msg)) {
   let p = state.p
   let job_stats = p.job |> job.job_stats
   let energy =
@@ -136,10 +148,12 @@ fn handle_work(state: State) -> #(State, Effect(a)) {
     |> job.roll_trouble_dice
     |> option.map(fn(e_id) { fight.start_fight(e_id, p) })
   {
-    None -> State(..state, p:)
-    Some(GameState(p:, fight:)) -> State(..state, p:, fight:)
+    None -> State(..state, p:) |> no_eff
+    Some(GameState(p:, fight:)) -> #(
+      State(..state, p:, fight:),
+      toast_effect("Random job brawl occurred"),
+    )
   }
-  |> no_eff
 }
 
 fn handle_action(state: State, action: Action) -> #(State, Effect(a)) {
@@ -297,9 +311,6 @@ fn try_save_to_localstore(msg: Msg, state: State) -> State {
 }
 
 // util ----------------------------------------
-fn set_p(s: State, p: Player) -> State {
-  State(..s, p:)
-}
 
 fn no_eff(a) -> #(a, Effect(b)) {
   #(a, effect.none())
