@@ -6,12 +6,11 @@ import gleam/list
 import gleam/option.{None, Some}
 import msg.{type FightMove}
 import state/state.{
-  type Fight, type Phase, type Player, type State, EnemyTurn, EnemyWon, Fight,
-  Player, PlayerFled, PlayerTurn, PlayerWon, Stamina, State,
+  type Fight, type GameState, type Phase, type Player, EnemyTurn, EnemyWon,
+  Fight, GameState, Player, PlayerFled, PlayerTurn, PlayerWon, Stamina,
 }
 
-// FIXME: no proper handling of enemy starts (should automatically do first turn)
-pub fn start_fight(enemy: EnemyId, p: Player) -> Fight {
+pub fn start_fight(enemy: EnemyId, p: Player) -> GameState {
   let enemy = enemy |> enemy.get_enemy
 
   let phase = case enemy.energy < p.energy.v {
@@ -20,13 +19,16 @@ pub fn start_fight(enemy: EnemyId, p: Player) -> Fight {
   }
 
   let max_stamina = p.skills.dexterity + p.energy.v + 100
-  Fight(phase, enemy, Stamina(max_stamina, max_stamina), False, None, None)
+  let fight =
+    Fight(phase, enemy, Stamina(max_stamina, max_stamina), False, None, None)
+
+  case phase {
+    EnemyTurn -> enemy_turn(p, fight)
+    _ -> GameState(p:, fight: Some(fight))
+  }
 }
 
-pub fn player_turn(state: State, move: FightMove) -> State {
-  let assert Some(fight) = state.fight
-    as "Illegal state - fight move outside of fight"
-
+pub fn player_turn(p: Player, fight: Fight, move: FightMove) -> GameState {
   case move {
     msg.FightAttack(move) -> {
       let assert state.PlayerTurn = fight.phase
@@ -35,7 +37,7 @@ pub fn player_turn(state: State, move: FightMove) -> State {
         as "Illegal state - not enough stamina"
 
       let weapon.WeaponStat(id: _, dmg:, def: _, crit:) =
-        state.p.equipped_weapon |> weapon.weapon_stats
+        p.equipped_weapon |> weapon.weapon_stats
       let real_dmg = dmg_calc(dmg, crit, fight.enemy.def)
       let health = fight.enemy.health - real_dmg
       let stamina = fight.stamina |> state.add_stamina(-move.stamina_cost)
@@ -46,8 +48,8 @@ pub fn player_turn(state: State, move: FightMove) -> State {
         False -> PlayerWon
       }
 
-      State(
-        ..state,
+      GameState(
+        p:,
         fight: Some(Fight(
           next_phase,
           enemy,
@@ -59,8 +61,8 @@ pub fn player_turn(state: State, move: FightMove) -> State {
       )
     }
     msg.FightRegenStamina ->
-      State(
-        ..state,
+      GameState(
+        p:,
         fight: Some(Fight(
           EnemyTurn,
           fight.enemy,
@@ -71,8 +73,8 @@ pub fn player_turn(state: State, move: FightMove) -> State {
         )),
       )
     msg.FightFlee ->
-      State(
-        ..state,
+      GameState(
+        p:,
         fight: Some(Fight(
           EnemyTurn,
           fight.enemy,
@@ -84,19 +86,16 @@ pub fn player_turn(state: State, move: FightMove) -> State {
       )
     msg.FightEnd -> {
       let assert True = fight.phase |> is_finite_phase as "Illegal state"
-      State(..state, fight: None)
+      GameState(p:, fight: None)
     }
   }
 }
 
-pub fn enemy_turn(state: State) -> State {
-  let assert Some(fight) = state.fight
-    as "Illegal state - fight move outside of fight"
-
+pub fn enemy_turn(p: Player, fight: Fight) -> GameState {
   let enemy = fight.enemy
-  let w_stats = state.p.equipped_weapon |> weapon.weapon_stats
+  let w_stats = p.equipped_weapon |> weapon.weapon_stats
   let real_dmg = dmg_calc(enemy.dmg, enemy.crit, w_stats.def)
-  let health = state.p.health |> state.add_health(-real_dmg)
+  let health = p.health |> state.add_health(-real_dmg)
 
   let next_phase = case health.v > 0, fight.flee_pending {
     True, True -> PlayerFled
@@ -104,16 +103,15 @@ pub fn enemy_turn(state: State) -> State {
     False, _ -> EnemyWon
   }
 
-  State(
-    ..state,
-    p: Player(..state.p, health:),
+  GameState(
+    p: Player(..p, health:),
     fight: Some(
       Fight(..fight, phase: next_phase, last_enemy_dmg: Some(real_dmg)),
     ),
   )
 }
 
-pub fn dmg_calc(dmg: Int, crit: Float, def: Int) {
+fn dmg_calc(dmg: Int, crit: Float, def: Int) -> Int {
   let crit_multiplier = case float.random() <=. crit {
     True -> 2
     False -> 1

@@ -20,7 +20,7 @@ import plinth/browser/document
 import plinth/browser/event
 import state/check
 import state/init
-import state/state.{type Player, type State, Inventory, Player, State}
+import state/state.{type Player, type State, GameState, Inventory, Player, State}
 import state/toast
 import util/either.{Left, Right}
 import util/localstore
@@ -49,7 +49,7 @@ fn init() -> State {
     False -> #(new_state.p, new_state.fight)
     True -> {
       case localstore.try_load_game_state() {
-        Some(state.GameState(p:, fight:)) -> #(p, fight)
+        Some(GameState(p:, fight:)) -> #(p, fight)
         None -> #(new_state.p, new_state.fight)
       }
     }
@@ -104,15 +104,19 @@ fn handle_keyboard(state: State, ev: KeyboardEvent) -> #(State, Effect(a)) {
 }
 
 fn handle_fight_move(state: State, move: FightMove) -> #(State, Effect(a)) {
-  let state = fight.player_turn(state, move)
+  let assert Some(fight) = state.fight
+    as "Illegal state - fight move outside of fight"
+
+  let GameState(p:, fight:) = fight.player_turn(state.p, fight, move)
 
   // immediately do enemy-turn (if it's his turn)
-  case state.fight {
+  let GameState(p:, fight:) = case state.fight {
     option.Some(fight) if fight.phase == state.EnemyTurn ->
-      fight.enemy_turn(state)
-    _ -> state
+      fight.enemy_turn(state.p, fight)
+    _ -> GameState(p:, fight:)
   }
-  |> no_eff
+
+  State(..state, p:, fight:) |> no_eff
 }
 
 fn handle_work(state: State) -> #(State, Effect(a)) {
@@ -123,19 +127,17 @@ fn handle_work(state: State) -> #(State, Effect(a)) {
     |> state.add_energy(-job_stats.energy_cost)
   let money = p.money |> state.add_money(job_stats.base_income)
   let p = Player(..p, energy:, money:)
-  let fight =
+
+  case
     {
       p.job
       |> job.job_stats
     }.trouble
     |> job.roll_trouble_dice
     |> option.map(fn(e_id) { fight.start_fight(e_id, p) })
-
-  let state = State(..state, fight:, p:)
-
-  case fight {
-    Some(fight) if fight.phase == state.EnemyTurn -> state |> fight.enemy_turn
-    _ -> state
+  {
+    None -> State(..state, p:)
+    Some(GameState(p:, fight:)) -> State(..state, p:, fight:)
   }
   |> no_eff
 }

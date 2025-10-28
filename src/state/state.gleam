@@ -77,6 +77,7 @@ pub type Player {
 
 // fight
 
+// idea: fight w. multiple enemies??
 pub type Fight {
   Fight(
     phase: Phase,
