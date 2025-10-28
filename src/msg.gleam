@@ -1,6 +1,6 @@
 import env/action.{type Action}
 import env/attack.{type AttackMove}
-import env/shop.{type Buyable}
+import env/shop.{type Buyable, type ConsumableId}
 import env/world.{type LocationId}
 import plinth/browser/event.{type Event, type UIEvent}
 import state/toast.{type Toast}
@@ -14,6 +14,7 @@ pub type Msg {
   PlayerFightMove(FightMove)
   PlayerAction(Action)
   PlayerShop(PlayerShopMsg)
+  PlayerConsum(ConsumableId)
   KeyDown(KeyboardEvent)
   SettingChange(SettingMsg)
   ToastChange(ToastMsg)

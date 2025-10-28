@@ -1,3 +1,5 @@
+import env/shop
+import env/weapon
 import gleam/json
 import gleeunit
 import gleeunit/should
@@ -11,7 +13,11 @@ pub fn main() {
 }
 
 pub fn state_roundtrip_no_fight_test() {
-  init.new_state() |> roundtrip
+  state.State(..init.new_state(), buyables: [
+    weapon.BrassKnuckles |> shop.weapon_sale,
+    shop.EnergyDrink |> shop.consumable_sale,
+  ])
+  |> roundtrip
 }
 
 pub fn state_roundtrip_with_fight_test() {

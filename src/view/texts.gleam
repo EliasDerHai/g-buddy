@@ -49,7 +49,8 @@ pub fn action(id: ActionId) {
       "Bus to "
       <> dest
       |> location
-    action.Workout -> "Workout"
+    action.WorkoutStrength -> "Workout (str)"
+    action.WorkoutDexterity -> "Workout (dex)"
     action.Sleep -> "End day"
   }
 }

@@ -4,7 +4,8 @@ import state/state.{type Player, type SkillId, type State, Player, State}
 
 pub type ActionId {
   BusTo(LocationId)
-  Workout
+  WorkoutStrength
+  WorkoutDexterity
   Sleep
 }
 
@@ -42,10 +43,16 @@ const all_actions = [
     [BusToEffect(world.BusStop)],
   ),
   Action(
-    Workout,
+    WorkoutStrength,
     world.Gym,
-    [Energy(30)],
+    [Money(20), Energy(40)],
     [SkillIncreaseEffect(state.Strength, 1)],
+  ),
+  Action(
+    WorkoutDexterity,
+    world.Gym,
+    [Money(20), Energy(30)],
+    [SkillIncreaseEffect(state.Dexterity, 1)],
   ),
   Action(Sleep, world.Apartment, [], [SleepEffect]),
 ]

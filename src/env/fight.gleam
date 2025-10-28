@@ -10,6 +10,7 @@ import state/state.{
   Player, PlayerFled, PlayerTurn, PlayerWon, Stamina, State,
 }
 
+// FIXME: no proper handling of enemy starts (should automatically do first turn)
 pub fn start_fight(enemy: EnemyId, p: Player) -> Fight {
   let enemy = enemy |> enemy.get_enemy
 

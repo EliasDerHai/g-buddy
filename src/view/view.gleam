@@ -3,6 +3,7 @@ import env/job
 import env/shop
 import env/world.{type LocationId}
 import gleam/bool
+import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
@@ -76,6 +77,20 @@ fn view_left_hud(model: State) -> List(Element(Msg)) {
     "Job: " <> model.p.job |> texts.job,
   ]
   |> list.map(generic_view.simple_text)
+  |> list.append([
+    "Items:" |> generic_view.simple_text,
+    html.div(
+      [attribute.class("flex flex-col gap-2 top-2")],
+      model.p.inventory.consumables
+        |> dict.to_list
+        |> list.map(fn(tuple) {
+          let #(consumable_id, amount) = tuple
+          let text =
+            consumable_id |> texts.consumable <> " x" <> amount |> int.to_string
+          generic_view.button(text, msg.PlayerConsum(consumable_id))
+        }),
+    ),
+  ])
 }
 
 fn view_right_hud(model: State) -> List(Element(Msg)) {

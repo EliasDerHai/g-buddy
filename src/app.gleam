@@ -1,7 +1,7 @@
 import env/action.{type Action}
 import env/fight
 import env/job
-import env/shop.{type Buyable}
+import env/shop.{type Buyable, type ConsumableId}
 import env/world.{type LocationId}
 import gleam/bool
 import gleam/dict
@@ -25,6 +25,7 @@ import state/toast
 import util/either.{Left, Right}
 import util/localstore
 import util/time
+import view/texts
 import view/view
 
 // MAIN ------------------------------------------------------------------------
@@ -74,6 +75,7 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.PlayerFightMove(move) -> handle_fight_move(state, move)
     msg.PlayerAction(action) -> handle_action(state, action)
     msg.PlayerShop(shop) -> handle_shop(state, shop)
+    msg.PlayerConsum(item) -> handle_consumption(state, item)
     msg.KeyDown(key) -> handle_keyboard(state, key)
     msg.Noop -> state |> no_eff
     msg.SettingChange(msg) -> handle_setting_toggle(state, msg)
@@ -81,40 +83,6 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.TooltipChange(msg) -> handle_tooltip(state, msg)
   }
   |> pair.map_first(try_save_to_localstore(msg, _))
-}
-
-fn handle_shop(state: State, shop: PlayerShopMsg) -> #(State, Effect(Msg)) {
-  let buy = fn(state: State, item: Buyable) -> State {
-    let p = state.p
-    let assert True = p.money.v >= item.price
-    let money = p.money |> state.add_money(-item.price)
-
-    let inventory = case item.id {
-      Right(consumable_id) ->
-        Inventory(
-          ..p.inventory,
-          consumables: p.inventory.consumables
-            |> dict.upsert(consumable_id, fn(amount) {
-              { amount |> option.unwrap(0) } + 1
-            }),
-        )
-      Left(weapon_id) ->
-        Inventory(
-          ..p.inventory,
-          collected_weapons: p.inventory.collected_weapons
-            |> set.insert(weapon_id),
-        )
-    }
-
-    State(..state, p: Player(..p, money:, inventory:))
-  }
-
-  case shop {
-    msg.ShopBuy(item:) -> state |> buy(item)
-    msg.ShopClose -> State(..state, buyables: [])
-    msg.ShopOpen(options:) -> State(..state, buyables: options)
-  }
-  |> no_eff
 }
 
 fn handle_move(state: State, location: LocationId) -> #(State, Effect(a)) {
@@ -163,13 +131,88 @@ fn handle_work(state: State) -> #(State, Effect(a)) {
     |> job.roll_trouble_dice
     |> option.map(fn(e_id) { fight.start_fight(e_id, p) })
 
-  State(..state, fight:, p:) |> no_eff
+  let state = State(..state, fight:, p:)
+
+  case fight {
+    Some(fight) if fight.phase == state.EnemyTurn -> state |> fight.enemy_turn
+    _ -> state
+  }
+  |> no_eff
 }
 
 fn handle_action(state: State, action: Action) -> #(State, Effect(a)) {
   let assert [] = check.check_action_costs(state.p, action.costs)
     as "Illegal state - action should be disabled"
   action.apply_action(state, action) |> no_eff
+}
+
+fn handle_shop(state: State, shop: PlayerShopMsg) -> #(State, Effect(Msg)) {
+  let buy = fn(state: State, item: Buyable) -> State {
+    let p = state.p
+    let assert True = p.money.v >= item.price
+    let money = p.money |> state.add_money(-item.price)
+
+    let inventory = case item.id {
+      Right(consumable_id) ->
+        Inventory(
+          ..p.inventory,
+          consumables: p.inventory.consumables
+            |> dict.upsert(consumable_id, fn(amount) {
+              { amount |> option.unwrap(0) } + 1
+            }),
+        )
+      Left(weapon_id) ->
+        Inventory(
+          ..p.inventory,
+          collected_weapons: p.inventory.collected_weapons
+            |> set.insert(weapon_id),
+        )
+    }
+
+    State(..state, p: Player(..p, money:, inventory:))
+  }
+
+  case shop {
+    msg.ShopBuy(item:) -> state |> buy(item)
+    msg.ShopClose -> State(..state, buyables: [])
+    msg.ShopOpen(options:) -> State(..state, buyables: options)
+  }
+  |> no_eff
+}
+
+fn handle_consumption(state: State, id: ConsumableId) -> #(State, Effect(Msg)) {
+  let consumables =
+    state.p.inventory.consumables
+    |> dict.upsert(id, fn(curr) {
+      case curr {
+        None | Some(0) ->
+          panic as { "not enough " <> id |> string.inspect <> " to consume" }
+        Some(other) -> other - 1
+      }
+    })
+    |> dict.filter(fn(_, amount) { amount > 0 })
+  let effects = id |> shop.consumable_effect
+
+  let p =
+    effects
+    |> list.fold(state.p, fn(p, eff) {
+      case eff {
+        shop.ConsumableEffectEnergy(gain:) ->
+          Player(
+            ..p,
+            inventory: Inventory(..state.p.inventory, consumables:),
+            energy: p.energy |> state.add_energy(gain),
+          )
+        shop.ConsumableEffectHealth(gain:) ->
+          Player(
+            ..p,
+            inventory: Inventory(..state.p.inventory, consumables:),
+            health: p.health |> state.add_health(gain),
+          )
+      }
+    })
+
+  #(State(..state, p:), toast_effect("Consumed " <> id |> texts.consumable))
 }
 
 fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(Msg)) {
@@ -194,11 +237,7 @@ fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(Msg))
   case msg {
     msg.SettingReset -> #(
       State(..state, settings:),
-      effect.from(fn(dispatch) {
-        msg.ToastChange(msg.ToastAdd(toast.create_info_toast("Storage reset")))
-        |> dispatch
-        Nil
-      }),
+      toast_effect("Storage reset"),
     )
     _ -> State(..state, settings:) |> no_eff
   }
@@ -245,6 +284,7 @@ fn try_save_to_localstore(msg: Msg, state: State) -> State {
       | msg.PlayerMove(_)
       | msg.PlayerFightMove(_)
       | msg.PlayerShop(_)
+      | msg.PlayerConsum(_)
       if state.settings.autosave
     -> {
       localstore.try_save_game_state(state.p, state.fight)
@@ -261,4 +301,12 @@ fn set_p(s: State, p: Player) -> State {
 
 fn no_eff(a) -> #(a, Effect(b)) {
   #(a, effect.none())
+}
+
+fn toast_effect(info_msg: String) -> Effect(Msg) {
+  effect.from(fn(dispatch) {
+    msg.ToastChange(msg.ToastAdd(toast.create_info_toast(info_msg)))
+    |> dispatch
+    Nil
+  })
 }

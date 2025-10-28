@@ -11,6 +11,19 @@ pub type ConsumableId {
 
 pub const all_consumables = [EnergyDrink, SmallHealthPack, BigHealthPack]
 
+pub type ConsumableEffect {
+  ConsumableEffectEnergy(gain: Int)
+  ConsumableEffectHealth(gain: Int)
+}
+
+pub fn consumable_effect(id: ConsumableId) -> List(ConsumableEffect) {
+  case id {
+    EnergyDrink -> [ConsumableEffectEnergy(10)]
+    SmallHealthPack -> [ConsumableEffectHealth(25)]
+    BigHealthPack -> [ConsumableEffectHealth(75)]
+  }
+}
+
 pub type Buyable {
   Buyable(id: Either(WeaponId, ConsumableId), price: Int, shop: LocationId)
 }
@@ -34,7 +47,7 @@ fn buyables_by_id(id: Either(WeaponId, ConsumableId)) {
   }
 }
 
-fn weapon_sale(id: WeaponId) -> Buyable {
+pub fn weapon_sale(id: WeaponId) -> Buyable {
   let b = fn(price: Int, shop: LocationId) {
     Buyable(id: either.from_left(id), price:, shop:)
   }
@@ -44,13 +57,13 @@ fn weapon_sale(id: WeaponId) -> Buyable {
   }
 }
 
-fn consumable_sale(id: ConsumableId) -> Buyable {
+pub fn consumable_sale(id: ConsumableId) -> Buyable {
   let b = fn(price: Int, shop: LocationId) {
     Buyable(id: either.from_right(id), price:, shop:)
   }
   case id {
     EnergyDrink -> b(10, GasStation)
-    SmallHealthPack -> b(10, GasStation)
-    BigHealthPack -> b(10, GasStation)
+    SmallHealthPack -> b(100, GasStation)
+    BigHealthPack -> b(200, GasStation)
   }
 }

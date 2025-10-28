@@ -16,6 +16,7 @@ pub type State {
     // non-empty == modal shop open
     buyables: List(Buyable),
     settings: Settings,
+    // UI 
     toasts: List(Toast),
     active_tooltip: Option(String),
   )
