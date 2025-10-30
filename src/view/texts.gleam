@@ -40,6 +40,7 @@ pub fn enemy(id: EnemyId) -> String {
   case id {
     enemy.Lvl1 -> "Drunkard"
     enemy.Lvl2 -> "Goon"
+    enemy.Lvl10 -> "Hitman"
   }
 }
 

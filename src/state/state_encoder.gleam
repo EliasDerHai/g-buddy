@@ -158,9 +158,10 @@ fn phase_to_json(phase: Phase) -> Json {
 }
 
 fn enemy_to_json(enemy: Enemy) -> Json {
-  let enemy.Enemy(id:, dmg:, def:, crit:, health:, energy:) = enemy
+  let enemy.Enemy(id:, lvl:, dmg:, def:, crit:, health:, energy:) = enemy
   json.object([
     #("id", enemy_id_to_json(id)),
+    #("lvl", json.int(lvl)),
     #("dmg", json.int(dmg)),
     #("def", json.int(def)),
     #("crit", json.float(crit)),

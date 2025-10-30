@@ -193,12 +193,13 @@ fn phase_decoder() -> Decoder(Phase) {
 
 fn enemy_decoder() -> Decoder(Enemy) {
   use id <- decode.field("id", enemy_id_decoder())
+  use lvl <- decode.field("lvl", decode.int)
   use dmg <- decode.field("dmg", decode.int)
   use def <- decode.field("def", decode.int)
   use crit <- decode.field("crit", decode.float)
   use health <- decode.field("health", decode.int)
   use energy <- decode.field("energy", decode.int)
-  decode.success(enemy.Enemy(id:, dmg:, def:, crit:, health:, energy:))
+  decode.success(enemy.Enemy(id:, lvl:, dmg:, def:, crit:, health:, energy:))
 }
 
 fn enemy_id_decoder() -> Decoder(EnemyId) {

@@ -1,4 +1,5 @@
 import env/action.{type Action}
+import env/enemy
 import env/fight
 import env/job
 import env/shop.{type Buyable, type ConsumableId}
@@ -88,7 +89,7 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
 fn handle_move(state: State, location: LocationId) -> #(State, Effect(Msg)) {
   let gs =
     location
-    |> world.random_location_trouble
+    |> enemy.random_location_trouble
     |> option.map(fn(e_id) { fight.start_fight(e_id, state.p) })
 
   case gs {

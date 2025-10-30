@@ -1,7 +1,21 @@
+import env/enemy
 import env/world
+import gleam/int
+import gleam/io
+import gleam/list
 import gleeunit
 import state/init
 import state/state
+
+pub fn reward_test() {
+  list.range(1, 20)
+  |> list.each(fn(i) {
+    let x = enemy.pure_reward(i)
+    let i = i |> int.to_string
+    let x = x |> int.to_string
+    io.println("lvl " <> i <> ": " <> x)
+  })
+}
 
 pub fn main() -> Nil {
   gleeunit.main()

@@ -1,7 +1,4 @@
-import env/enemy.{type EnemyId}
-import gleam/float
 import gleam/list
-import gleam/option.{type Option, None, Some}
 import gleam/result
 
 // MAP LAYOUT (n-e-s-w connections)
@@ -101,23 +98,4 @@ pub fn get_location(id: LocationId) -> LocationNode {
     |> result.unwrap(NoLocation)
 
   LocationNode(id, #(n, e, s, w))
-}
-
-pub fn random_location_trouble(id: LocationId) -> Option(EnemyId) {
-  let troubles = case id {
-    BusStop -> [#(0.01, enemy.Lvl1)]
-    SlingerCorner -> [#(0.01, enemy.Lvl1), #(0.01, enemy.Lvl2)]
-    _ -> []
-  }
-
-  let r = float.random()
-  troubles
-  |> list.shuffle
-  |> list.fold(None, fn(curr, el) {
-    let #(chance, enemy) = el
-    case r <=. chance && curr |> option.is_none() {
-      True -> Some(enemy)
-      False -> curr
-    }
-  })
 }
