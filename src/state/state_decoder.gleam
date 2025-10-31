@@ -180,14 +180,17 @@ fn fight_decoder() -> Decoder(Fight) {
 }
 
 fn phase_decoder() -> Decoder(Phase) {
-  use str <- decode.then(decode.string)
-  case str {
+  use phase_type <- decode.field("type", decode.string)
+  case phase_type {
     "PlayerTurn" -> decode.success(state.PlayerTurn)
     "EnemyTurn" -> decode.success(state.EnemyTurn)
-    "PlayerWon" -> decode.success(state.PlayerWon)
+    "PlayerWon" -> {
+      use reward <- decode.field("reward", decode.int)
+      decode.success(state.PlayerWon(reward:))
+    }
     "EnemyWon" -> decode.success(state.EnemyWon)
     "PlayerFled" -> decode.success(state.PlayerFled)
-    _ -> decode.failure(state.PlayerTurn, "Invalid Phase: " <> str)
+    _ -> decode.failure(state.PlayerTurn, "Invalid Phase: " <> phase_type)
   }
 }
 
@@ -207,6 +210,7 @@ fn enemy_id_decoder() -> Decoder(EnemyId) {
   case str {
     "Lvl1" -> decode.success(enemy.Lvl1)
     "Lvl2" -> decode.success(enemy.Lvl2)
+    "Lvl10" -> decode.success(enemy.Lvl10)
     _ -> decode.failure(enemy.Lvl1, "Invalid EnemyId: " <> str)
   }
 }

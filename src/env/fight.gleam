@@ -2,7 +2,6 @@ import env/enemy.{type EnemyId, Enemy}
 import env/weapon
 import gleam/float
 import gleam/int
-import gleam/list
 import gleam/option.{None, Some}
 import msg.{type FightMove}
 import state/state.{
@@ -45,47 +44,55 @@ pub fn player_turn(p: Player, fight: Fight, move: FightMove) -> GameState {
       let enemy = Enemy(..fight.enemy, health:)
       let next_phase = case enemy.health > 0 {
         True -> EnemyTurn
-        False -> PlayerWon
+        False -> PlayerWon(reward: enemy.get_victory_reward(enemy))
       }
 
-      GameState(
-        p:,
-        fight: Some(Fight(
-          next_phase,
-          enemy,
-          stamina,
-          False,
-          Some(real_dmg),
-          None,
-        )),
-      )
+      let fight =
+        Some(
+          Fight(
+            ..fight,
+            phase: next_phase,
+            enemy:,
+            stamina:,
+            last_player_dmg: Some(real_dmg),
+          ),
+        )
+
+      GameState(p:, fight:)
     }
     msg.FightRegenStamina ->
       GameState(
         p:,
-        fight: Some(Fight(
-          EnemyTurn,
-          fight.enemy,
-          fight.stamina |> state.refill_stamina,
-          False,
-          None,
-          None,
-        )),
+        fight: Some(
+          Fight(
+            ..fight,
+            phase: EnemyTurn,
+            stamina: fight.stamina |> state.refill_stamina,
+            last_player_dmg: None,
+          ),
+        ),
       )
     msg.FightFlee ->
       GameState(
         p:,
-        fight: Some(Fight(
-          EnemyTurn,
-          fight.enemy,
-          fight.stamina,
-          True,
-          None,
-          None,
-        )),
+        fight: Some(
+          Fight(
+            ..fight,
+            phase: EnemyTurn,
+            flee_pending: True,
+            last_player_dmg: None,
+          ),
+        ),
       )
     msg.FightEnd -> {
       let assert True = fight.phase |> is_finite_phase as "Illegal state"
+
+      let p = case fight.phase {
+        PlayerWon(reward:) ->
+          Player(..p, money: p.money |> state.add_money(reward))
+        _ -> p
+      }
+
       GameState(p:, fight: None)
     }
   }
@@ -122,5 +129,8 @@ fn dmg_calc(dmg: Int, crit: Float, def: Int) -> Int {
 }
 
 fn is_finite_phase(phase: Phase) -> Bool {
-  [PlayerFled, PlayerWon, EnemyWon] |> list.contains(phase)
+  case phase {
+    EnemyWon | PlayerFled | PlayerWon(_) -> True
+    _ -> False
+  }
 }

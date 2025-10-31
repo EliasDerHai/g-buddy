@@ -92,7 +92,7 @@ pub type Fight {
 pub type Phase {
   PlayerTurn
   EnemyTurn
-  PlayerWon
+  PlayerWon(reward: Int)
   EnemyWon
   PlayerFled
 }

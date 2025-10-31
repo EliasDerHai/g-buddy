@@ -84,8 +84,14 @@ pub fn view_fight(state: State, fight: Fight) -> List(Element(Msg)) {
           html.p([attribute.class("text-blue-400")], [html.text("Your turn")])
         EnemyTurn ->
           html.p([attribute.class("text-red-400")], [html.text("Enemy turn")])
-        PlayerWon ->
-          html.p([attribute.class("text-green-400")], [html.text("Victory!")])
+        PlayerWon(reward:) ->
+          html.div([], [
+            html.p([attribute.class("text-green-400")], [html.text("Victory!")]),
+            html.p([], [
+              { "Enemy dropped: $" <> reward |> int.to_string }
+              |> generic_view.simple_text,
+            ]),
+          ])
         EnemyWon ->
           html.p([attribute.class("text-red-400")], [html.text("Defeated!")])
         PlayerFled ->
@@ -111,7 +117,7 @@ pub fn view_fight(state: State, fight: Fight) -> List(Element(Msg)) {
               PlayerFightMove(FightFlee),
             ),
           ])
-        PlayerWon | EnemyWon | PlayerFled -> [
+        PlayerWon(_) | EnemyWon | PlayerFled -> [
           generic_view.full_width_button("Close", PlayerFightMove(FightEnd)),
         ]
         EnemyTurn ->

@@ -25,7 +25,7 @@ fn log_e(e: PersistenceError) {
     OperationFailed -> "storage operation failed"
     DecodingFailed -> "decoding stored element failed"
   }
-  |> io.println_error
+  |> io.println
 }
 
 pub fn reset() {

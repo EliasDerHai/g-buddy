@@ -123,9 +123,8 @@ fn handle_fight_move(state: State, move: FightMove) -> #(State, Effect(a)) {
   let GameState(p:, fight:) = fight.player_turn(state.p, fight, move)
 
   // immediately do enemy-turn (if it's his turn)
-  let GameState(p:, fight:) = case state.fight {
-    option.Some(fight) if fight.phase == state.EnemyTurn ->
-      fight.enemy_turn(state.p, fight)
+  let GameState(p:, fight:) = case fight {
+    option.Some(f) if f.phase == state.EnemyTurn -> fight.enemy_turn(state.p, f)
     _ -> GameState(p:, fight:)
   }
 

@@ -188,6 +188,7 @@ pub fn toggle_button(active: Bool, on_toggle: Msg) -> Element(Msg) {
 pub fn modal(
   is_open: Bool,
   closeable: Option(Msg),
+  // TODO: make content a fn () -> List(Element(Msg))
   content: List(Element(Msg)),
 ) -> Element(Msg) {
   use <- bool.guard(!is_open, html.div([], []))

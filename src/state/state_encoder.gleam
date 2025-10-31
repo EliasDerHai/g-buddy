@@ -154,7 +154,17 @@ fn fight_to_json(fight: Fight) -> Json {
 }
 
 fn phase_to_json(phase: Phase) -> Json {
-  phase |> string.inspect |> json.string
+  case phase {
+    state.PlayerTurn -> json.object([#("type", json.string("PlayerTurn"))])
+    state.EnemyTurn -> json.object([#("type", json.string("EnemyTurn"))])
+    state.PlayerWon(reward:) ->
+      json.object([
+        #("type", json.string("PlayerWon")),
+        #("reward", json.int(reward)),
+      ])
+    state.EnemyWon -> json.object([#("type", json.string("EnemyWon"))])
+    state.PlayerFled -> json.object([#("type", json.string("PlayerFled"))])
+  }
 }
 
 fn enemy_to_json(enemy: Enemy) -> Json {
