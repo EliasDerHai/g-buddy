@@ -112,6 +112,16 @@ pub type GameState {
   GameState(p: Player, fight: Option(Fight))
 }
 
+// story
+
+pub type StoryLineId {
+  Main
+}
+
+pub type StoryChapterId {
+  Main01
+}
+
 // INIT -------------------------------------------------
 pub const start_money = 100
 

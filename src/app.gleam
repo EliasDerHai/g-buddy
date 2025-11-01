@@ -291,10 +291,8 @@ fn handle_tooltip(state: State, msg: TooltipMsg) -> #(State, Effect(Msg)) {
 
 fn try_save_to_localstore(msg: Msg, state: State) -> State {
   case msg {
-    msg.SettingChange(msg) if msg != msg.SettingReset -> {
+    msg.SettingChange(m) if m != msg.SettingReset ->
       localstore.try_save_settings(state.settings)
-      state
-    }
     msg.PlayerAction(_)
       | msg.PlayerWork
       | msg.PlayerMove(_)
@@ -302,12 +300,10 @@ fn try_save_to_localstore(msg: Msg, state: State) -> State {
       | msg.PlayerShop(_)
       | msg.PlayerConsum(_)
       if state.settings.autosave
-    -> {
-      localstore.try_save_game_state(state.p, state.fight)
-      state
-    }
-    _ -> state
+    -> localstore.try_save_game_state(state.p, state.fight)
+    _ -> Nil
   }
+  state
 }
 
 // util ----------------------------------------

@@ -55,6 +55,10 @@ pub fn player_turn(p: Player, fight: Fight, move: FightMove) -> GameState {
             enemy:,
             stamina:,
             last_player_dmg: Some(real_dmg),
+            last_enemy_dmg: case next_phase {
+              PlayerWon(_) -> None
+              _ -> fight.last_enemy_dmg
+            },
           ),
         )
 
