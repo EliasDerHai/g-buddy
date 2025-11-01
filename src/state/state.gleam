@@ -16,6 +16,7 @@ pub type State {
     // non-empty == modal shop open
     buyables: List(Buyable),
     settings: Settings,
+    active_story: Option(#(StoryChapterId, Int)),
     // UI 
     toasts: List(Toast),
     active_tooltip: Option(String),
@@ -72,6 +73,7 @@ pub type Player {
     day_count: Int,
     skills: Skills,
     inventory: Inventory,
+    story: Dict(StoryLineId, StoryChapterId),
   )
 }
 

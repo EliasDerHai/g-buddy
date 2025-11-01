@@ -15,6 +15,7 @@ pub fn new_state() {
     None,
     [],
     state.Settings(state.Hidden, True, True),
+    None,
     [],
     None,
   )
@@ -34,6 +35,7 @@ pub fn new_state_fight() {
     )),
     [],
     state.Settings(state.Hidden, True, True),
+    None,
     [],
     None,
   )
@@ -50,5 +52,6 @@ fn new_player() {
     0,
     Skills(0, 0, 0, 0),
     Inventory(set.new(), dict.new()),
+    dict.from_list([#(state.Main, state.Main01)]),
   )
 }

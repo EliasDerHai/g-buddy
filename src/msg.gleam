@@ -3,6 +3,7 @@ import env/attack.{type AttackMove}
 import env/shop.{type Buyable, type ConsumableId}
 import env/world.{type LocationId}
 import plinth/browser/event.{type Event, type UIEvent}
+import state/state.{type StoryChapterId}
 import state/toast.{type Toast}
 
 pub type KeyboardEvent =
@@ -15,6 +16,7 @@ pub type Msg {
   PlayerAction(Action)
   PlayerShop(PlayerShopMsg)
   PlayerConsum(ConsumableId)
+  PlayerStoryActivate(StoryChapterId)
   KeyDown(KeyboardEvent)
   SettingChange(SettingMsg)
   ToastChange(ToastMsg)

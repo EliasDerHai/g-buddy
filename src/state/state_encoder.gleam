@@ -48,6 +48,7 @@ fn player_to_json(player: Player) -> Json {
     day_count:,
     skills:,
     inventory:,
+    story:,
   ) = player
   json.object([
     #("money", money_to_json(money)),
@@ -59,6 +60,16 @@ fn player_to_json(player: Player) -> Json {
     #("day_count", json.int(day_count)),
     #("skills", skills_to_json(skills)),
     #("inventory", inventory_to_json(inventory)),
+    #(
+      "story",
+      json.array(story |> dict.to_list, fn(pair) {
+        let #(line_id, chapter_id) = pair
+        json.object([
+          #("line_id", story_line_id_to_json(line_id)),
+          #("chapter_id", story_chapter_id_to_json(chapter_id)),
+        ])
+      }),
+    ),
   ])
 }
 
@@ -181,5 +192,13 @@ fn enemy_to_json(enemy: Enemy) -> Json {
 }
 
 fn enemy_id_to_json(id: EnemyId) -> Json {
+  id |> string.inspect |> json.string
+}
+
+fn story_line_id_to_json(id: state.StoryLineId) -> Json {
+  id |> string.inspect |> json.string
+}
+
+fn story_chapter_id_to_json(id: state.StoryChapterId) -> Json {
   id |> string.inspect |> json.string
 }

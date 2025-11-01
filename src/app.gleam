@@ -21,7 +21,9 @@ import plinth/browser/document
 import plinth/browser/event
 import state/check
 import state/init
-import state/state.{type State, GameState, Inventory, Player, State}
+import state/state.{
+  type State, type StoryChapterId, GameState, Inventory, Player, State,
+}
 import state/toast
 import util/either.{Left, Right}
 import util/localstore
@@ -56,7 +58,15 @@ fn init() -> State {
     }
   }
 
-  State(p:, fight:, buyables: [], settings:, toasts: [], active_tooltip: None)
+  State(
+    p:,
+    fight:,
+    buyables: [],
+    settings:,
+    active_story: None,
+    toasts: [],
+    active_tooltip: None,
+  )
 }
 
 fn setup_keyboard_listener() -> Effect(Msg) {
@@ -77,6 +87,7 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.PlayerAction(action) -> handle_action(state, action)
     msg.PlayerShop(shop) -> handle_shop(state, shop)
     msg.PlayerConsum(item) -> handle_consumption(state, item)
+    msg.PlayerStoryActivate(chapter) -> handle_story_activation(state, chapter)
     msg.KeyDown(key) -> handle_keyboard(state, key)
     msg.Noop -> state |> no_eff
     msg.SettingChange(msg) -> handle_setting_toggle(state, msg)
@@ -84,6 +95,13 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.TooltipChange(msg) -> handle_tooltip(state, msg)
   }
   |> pair.map_first(try_save_to_localstore(msg, _))
+}
+
+fn handle_story_activation(
+  state: State,
+  chapter: StoryChapterId,
+) -> #(State, Effect(Msg)) {
+  State(..state, active_story: Some(#(chapter, 0))) |> no_eff
 }
 
 fn handle_move(state: State, location: LocationId) -> #(State, Effect(Msg)) {

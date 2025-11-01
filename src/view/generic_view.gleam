@@ -52,6 +52,20 @@ pub fn button_with_icon(
   |> custom_button
 }
 
+pub fn button_with_icon_disabled(
+  icon: Element(Msg),
+  label: String,
+  on_click: Msg,
+  disabled_reason: Option(String),
+) -> Element(Msg) {
+  ButtonConfig(
+    ..default_config(label, on_click),
+    icon: Some(icon),
+    disabled_reason:,
+  )
+  |> custom_button
+}
+
 /// Warning/danger button (red)
 pub fn warning_button(label: String, on_click: Msg) -> Element(Msg) {
   ButtonConfig(..default_config(label, on_click), style: Warning)

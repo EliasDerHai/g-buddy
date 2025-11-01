@@ -43,6 +43,10 @@ fn player_decoder() -> Decoder(Player) {
   use day_count <- decode.field("day_count", decode.int)
   use skills <- decode.field("skills", skills_decoder())
   use inventory <- decode.field("inventory", inventory_decoder())
+  use story <- decode.field("story", decode.list(story_entry_decoder()))
+
+  let story_dict = story |> dict.from_list
+
   decode.success(state.Player(
     money:,
     health:,
@@ -53,6 +57,7 @@ fn player_decoder() -> Decoder(Player) {
     day_count:,
     skills:,
     inventory:,
+    story: story_dict,
   ))
 }
 
@@ -213,4 +218,26 @@ fn enemy_id_decoder() -> Decoder(EnemyId) {
     "Lvl10" -> decode.success(enemy.Lvl10)
     _ -> decode.failure(enemy.Lvl1, "Invalid EnemyId: " <> str)
   }
+}
+
+fn story_line_id_decoder() -> Decoder(state.StoryLineId) {
+  use str <- decode.then(decode.string)
+  case str {
+    "Main" -> decode.success(state.Main)
+    _ -> decode.failure(state.Main, "Invalid StoryLineId: " <> str)
+  }
+}
+
+fn story_chapter_id_decoder() -> Decoder(state.StoryChapterId) {
+  use str <- decode.then(decode.string)
+  case str {
+    "Main01" -> decode.success(state.Main01)
+    _ -> decode.failure(state.Main01, "Invalid StoryChapterId: " <> str)
+  }
+}
+
+fn story_entry_decoder() -> Decoder(#(state.StoryLineId, state.StoryChapterId)) {
+  use line_id <- decode.field("line_id", story_line_id_decoder())
+  use chapter_id <- decode.field("chapter_id", story_chapter_id_decoder())
+  decode.success(#(line_id, chapter_id))
 }

@@ -31,7 +31,10 @@ pub fn story_chapter(chapter: StoryChapterId) -> StoryChapter {
         id: chapter,
         condition: True |> as_p_fn,
         mission_desc: "Go to your workplace" |> as_p_fn,
-        activation: Auto(location: world.SlingerCorner),
+        activation: Active(
+          location: world.SlingerCorner,
+          action_title: "Greet gang",
+        ),
         nodes: [
           StoryNode(text: "text-01", option: "option-01"),
           StoryNode(text: "text-02", option: "option-02"),

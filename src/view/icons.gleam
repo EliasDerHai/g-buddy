@@ -126,3 +126,58 @@ pub fn shopping_cart(attributes: List(Attribute(a))) {
     ],
   )
 }
+
+pub fn briefcase_business(attributes: List(Attribute(a))) {
+  svg.svg(
+    [
+      attribute("stroke-linejoin", "round"),
+      attribute("stroke-linecap", "round"),
+      attribute("stroke-width", "2"),
+      attribute("stroke", "currentColor"),
+      attribute("fill", "none"),
+      attribute("viewBox", "0 0 24 24"),
+      attribute("height", "24"),
+      attribute("width", "24"),
+      ..attributes
+    ],
+    [
+      svg.path([attribute("d", "M12 12h.01")]),
+      svg.path([attribute("d", "M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2")]),
+      svg.path([attribute("d", "M22 13a18.15 18.15 0 0 1-20 0")]),
+      svg.rect([
+        attribute("rx", "2"),
+        attribute("y", "6"),
+        attribute("x", "2"),
+        attribute("height", "14"),
+        attribute("width", "20"),
+      ]),
+    ],
+  )
+}
+
+pub fn scroll_text(attributes: List(Attribute(a))) {
+  svg.svg(
+    [
+      attribute("stroke-linejoin", "round"),
+      attribute("stroke-linecap", "round"),
+      attribute("stroke-width", "2"),
+      attribute("stroke", "currentColor"),
+      attribute("fill", "none"),
+      attribute("viewBox", "0 0 24 24"),
+      attribute("height", "24"),
+      attribute("width", "24"),
+      ..attributes
+    ],
+    [
+      svg.path([attribute("d", "M15 12h-5")]),
+      svg.path([attribute("d", "M15 8h-5")]),
+      svg.path([attribute("d", "M19 17V5a2 2 0 0 0-2-2H4")]),
+      svg.path([
+        attribute(
+          "d",
+          "M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3",
+        ),
+      ]),
+    ],
+  )
+}

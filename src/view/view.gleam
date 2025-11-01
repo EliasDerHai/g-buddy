@@ -1,6 +1,7 @@
 import env/action
 import env/job
 import env/shop
+import env/story
 import env/world.{type LocationId}
 import gleam/bool
 import gleam/dict
@@ -11,7 +12,7 @@ import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
-import msg.{type Msg, PlayerAction, PlayerMove, PlayerWork}
+import msg.{type Msg, PlayerAction, PlayerMove, PlayerShop, PlayerWork, ShopOpen}
 import state/check
 import state/state.{type State}
 import state/toast
@@ -64,7 +65,7 @@ pub fn view(s: State) -> Element(Msg) {
         [] -> #(False, [])
         _ -> #(True, shop_view.view_shop(s))
       }
-      generic_view.modal(is_open, Some(msg.PlayerShop(msg.ShopClose)), content)
+      generic_view.modal(is_open, Some(PlayerShop(msg.ShopClose)), content)
     },
     toast.view_toasts(s.toasts),
   ])
@@ -121,6 +122,22 @@ fn view_right_hud(model: State) -> List(Element(Msg)) {
 fn view_navigation_buttons(state: State) -> List(Element(Msg)) {
   let location = world.get_location(state.p.location)
   let buyables = state.p.location |> shop.buyables
+  let story_action =
+    state.p.story
+    |> dict.to_list
+    |> list.find_map(fn(t) {
+      let chap = t.1 |> story.story_chapter
+      case chap.activation {
+        story.Active(location:, action_title:) ->
+          case state.p.location == location && chap.condition(state.p) {
+            True -> Some(#(chap.id, action_title))
+            False -> None
+          }
+        story.Auto(_) -> None
+      }
+      |> option.to_result(Nil)
+    })
+    |> option.from_result
 
   let #(n, e, s, w) = location.connections
 
@@ -154,7 +171,8 @@ fn view_navigation_buttons(state: State) -> List(Element(Msg)) {
         []
           |> list_extension.append_when(
             { state.p.job |> job.job_stats }.workplace == state.p.location,
-            generic_view.simple_button(
+            generic_view.button_with_icon_disabled(
+              icons.briefcase_business([]),
               "Work",
               PlayerWork,
               check.check_work(state.p) |> option.map(texts.disabled_reason),
@@ -165,7 +183,17 @@ fn view_navigation_buttons(state: State) -> List(Element(Msg)) {
             generic_view.button_with_icon(
               icons.shopping_cart([]),
               "Buy",
-              msg.PlayerShop(msg.ShopOpen(buyables)),
+              PlayerShop(ShopOpen(buyables)),
+            ),
+          )
+          |> list_extension.append_when(
+            story_action |> option.is_some,
+            generic_view.button_with_icon(
+              icons.scroll_text([]),
+              story_action |> option.map(fn(o) { o.1 }) |> option.unwrap(""),
+              story_action
+                |> option.map(fn(o) { o.0 |> msg.PlayerStoryActivate })
+                |> option.unwrap(msg.Noop),
             ),
           )
           |> list.append(view_actions(state)),
