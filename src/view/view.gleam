@@ -42,6 +42,7 @@ pub fn view(s: State) -> Element(Msg) {
         view_right_hud(s),
       ),
     ]),
+    // NOTE: don't forget to update disabling keyboard interaction when adding new modals
     {
       let #(is_open, content) = case s.fight {
         None -> #(False, fn() { [] })
@@ -51,8 +52,10 @@ pub fn view(s: State) -> Element(Msg) {
     },
     {
       let #(is_open, content) = case s.settings.display {
-        state.Hidden -> #(False, fn() { [] })
-        state.SaveLoad -> #(True, fn() { setting_view.view_settings(s) })
+        state.SettingDisplayHidden -> #(False, fn() { [] })
+        state.SettingDisplaySaveLoad -> #(True, fn() {
+          setting_view.view_settings(s)
+        })
       }
       generic_view.modal(
         is_open,
@@ -117,10 +120,10 @@ fn view_right_hud(model: State) -> List(Element(Msg)) {
         |> list.map(generic_view.simple_text),
     ),
     html.div([], [
-      generic_view.simple_button(
+      generic_view.button_with_icon(
+        icons.settings([]),
         "Settings",
         msg.SettingChange(msg.SettingToggleDisplay),
-        None,
       ),
     ]),
   ]

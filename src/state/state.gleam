@@ -101,8 +101,8 @@ pub type Phase {
 
 // settings
 pub type SettingDisplay {
-  Hidden
-  SaveLoad
+  SettingDisplayHidden
+  SettingDisplaySaveLoad
 }
 
 pub type Settings {

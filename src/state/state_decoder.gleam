@@ -21,9 +21,13 @@ pub fn settings_decoder() -> Decoder(Settings) {
 fn setting_display_decoder() -> Decoder(SettingDisplay) {
   use str <- decode.then(decode.string)
   case str {
-    "Hidden" -> decode.success(state.Hidden)
-    "SaveLoad" -> decode.success(state.SaveLoad)
-    _ -> decode.failure(state.Hidden, "Invalid SettingDisplay: " <> str)
+    "Hidden" -> decode.success(state.SettingDisplayHidden)
+    "SaveLoad" -> decode.success(state.SettingDisplaySaveLoad)
+    _ ->
+      decode.failure(
+        state.SettingDisplayHidden,
+        "Invalid SettingDisplay: " <> str,
+      )
   }
 }
 

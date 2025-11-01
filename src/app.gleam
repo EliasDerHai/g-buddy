@@ -130,6 +130,15 @@ fn handle_move(state: State, location: LocationId) -> #(State, Effect(Msg)) {
 }
 
 fn handle_keyboard(state: State, ev: KeyboardEvent) -> #(State, Effect(Msg)) {
+  let keyboard_disabled = {
+    state.fight |> option.is_some
+    || state.buyables |> list.length > 0
+    || state.active_story |> option.is_some
+    || state.settings.display != state.SettingDisplayHidden
+  }
+
+  use <- bool.guard(keyboard_disabled, state |> no_eff)
+
   let location = world.get_location(state.p.location)
   let #(n, e, s, w) = location.connections
 
@@ -271,8 +280,8 @@ fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(Msg))
       state.Settings(..state.settings, autosave: autosave |> bool.negate)
     msg.SettingToggleDisplay ->
       state.Settings(..state.settings, display: case display {
-        state.Hidden -> state.SaveLoad
-        state.SaveLoad -> state.Hidden
+        state.SettingDisplayHidden -> state.SettingDisplaySaveLoad
+        state.SettingDisplaySaveLoad -> state.SettingDisplayHidden
       })
   }
 
