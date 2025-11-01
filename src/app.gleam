@@ -15,15 +15,13 @@ import lustre
 import lustre/effect.{type Effect}
 import msg.{
   type FightMove, type KeyboardEvent, type Msg, type PlayerShopMsg,
-  type SettingMsg, type ToastMsg, type TooltipMsg,
+  type SettingMsg, type StoryMsg, type ToastMsg, type TooltipMsg,
 }
 import plinth/browser/document
 import plinth/browser/event
 import state/check
 import state/init
-import state/state.{
-  type State, type StoryChapterId, GameState, Inventory, Player, State,
-}
+import state/state.{type State, GameState, Inventory, Player, State}
 import state/toast
 import util/either.{Left, Right}
 import util/localstore
@@ -87,7 +85,7 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.PlayerAction(action) -> handle_action(state, action)
     msg.PlayerShop(shop) -> handle_shop(state, shop)
     msg.PlayerConsum(item) -> handle_consumption(state, item)
-    msg.PlayerStoryActivate(chapter) -> handle_story_activation(state, chapter)
+    msg.PlayerStory(msg) -> handle_story_msg(state, msg)
     msg.KeyDown(key) -> handle_keyboard(state, key)
     msg.Noop -> state |> no_eff
     msg.SettingChange(msg) -> handle_setting_toggle(state, msg)
@@ -97,11 +95,21 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
   |> pair.map_first(try_save_to_localstore(msg, _))
 }
 
-fn handle_story_activation(
-  state: State,
-  chapter: StoryChapterId,
-) -> #(State, Effect(Msg)) {
-  State(..state, active_story: Some(#(chapter, 0))) |> no_eff
+fn handle_story_msg(state: State, msg: StoryMsg) -> #(State, Effect(Msg)) {
+  case msg {
+    msg.StoryActivate(chap:) -> State(..state, active_story: Some(#(chap, 0)))
+    msg.StoryChapterComplete(next_chap:, for_line:) -> {
+      let p =
+        Player(
+          ..state.p,
+          story: state.p.story |> dict.insert(for_line, next_chap),
+        )
+      State(..state, p:, active_story: None)
+    }
+    msg.StoryOptionPick(chap:, node_id:) ->
+      State(..state, active_story: Some(#(chap, node_id)))
+  }
+  |> no_eff
 }
 
 fn handle_move(state: State, location: LocationId) -> #(State, Effect(Msg)) {

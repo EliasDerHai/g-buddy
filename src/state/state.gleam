@@ -122,6 +122,8 @@ pub type StoryLineId {
 
 pub type StoryChapterId {
   Main01
+
+  Placeholder
 }
 
 // INIT -------------------------------------------------

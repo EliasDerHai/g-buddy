@@ -22,6 +22,7 @@ import view/generic_view
 import view/icons
 import view/setting_view
 import view/shop_view
+import view/story_view
 import view/texts
 
 pub fn view(s: State) -> Element(Msg) {
@@ -42,17 +43,16 @@ pub fn view(s: State) -> Element(Msg) {
       ),
     ]),
     {
-      let is_open = s.fight |> option.is_some
-      let content = case s.fight {
-        None -> []
-        Some(fight) -> fight_view.view_fight(s, fight)
+      let #(is_open, content) = case s.fight {
+        None -> #(False, fn() { [] })
+        Some(fight) -> #(True, fn() { fight_view.view_fight(s, fight) })
       }
       generic_view.modal(is_open, None, content)
     },
     {
       let #(is_open, content) = case s.settings.display {
-        state.Hidden -> #(False, [])
-        state.SaveLoad -> #(True, setting_view.view_settings(s))
+        state.Hidden -> #(False, fn() { [] })
+        state.SaveLoad -> #(True, fn() { setting_view.view_settings(s) })
       }
       generic_view.modal(
         is_open,
@@ -62,10 +62,17 @@ pub fn view(s: State) -> Element(Msg) {
     },
     {
       let #(is_open, content) = case s.buyables {
-        [] -> #(False, [])
-        _ -> #(True, shop_view.view_shop(s))
+        [] -> #(False, fn() { [] })
+        _ -> #(True, fn() { shop_view.view_shop(s) })
       }
       generic_view.modal(is_open, Some(PlayerShop(msg.ShopClose)), content)
+    },
+    {
+      let #(is_open, content) = case s.active_story {
+        None -> #(False, fn() { [] })
+        Some(#(a, b)) -> #(True, fn() { story_view.view_story(a, b) })
+      }
+      generic_view.modal(is_open, None, content)
     },
     toast.view_toasts(s.toasts),
   ])
@@ -192,7 +199,7 @@ fn view_navigation_buttons(state: State) -> List(Element(Msg)) {
               icons.scroll_text([]),
               story_action |> option.map(fn(o) { o.1 }) |> option.unwrap(""),
               story_action
-                |> option.map(fn(o) { o.0 |> msg.PlayerStoryActivate })
+                |> option.map(fn(o) { msg.PlayerStory(msg.StoryActivate(o.0)) })
                 |> option.unwrap(msg.Noop),
             ),
           )
