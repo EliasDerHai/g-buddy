@@ -55,25 +55,20 @@ fn init() -> State {
     localstore.try_load_settings()
     |> option.unwrap(new_state.settings)
 
-  let #(p, fight) = case settings.autoload {
-    False -> #(new_state.p, new_state.fight)
+  let #(p, overlay) = case settings.autoload {
+    False -> #(new_state.p, new_state.overlay)
     True -> {
       case localstore.try_load_game_state() {
-        Some(GameState(p:, fight:)) -> #(p, fight)
-        None -> #(new_state.p, new_state.fight)
+        Some(GameState(p:, fight:)) -> #(p, case fight {
+          None -> new_state.overlay
+          Some(f) -> state.OverlayFight(f)
+        })
+        None -> #(new_state.p, new_state.overlay)
       }
     }
   }
 
-  State(
-    p:,
-    fight:,
-    buyables: [],
-    settings:,
-    active_story: None,
-    toasts: [],
-    active_tooltip: None,
-  )
+  State(p:, overlay:, settings:, toasts: [], active_tooltip: None)
 }
 
 fn setup_keyboard_listener() -> Effect(Msg) {
@@ -100,19 +95,14 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.SettingChange(msg) -> handle_setting_toggle(state, msg)
     msg.ToastChange(msg) -> handle_toast(state, msg)
     msg.TooltipChange(msg) -> handle_tooltip(state, msg)
+    msg.CloseOverlay -> State(..state, overlay: state.NoOverlay) |> no_eff
   }
   |> pair.map_first(try_save_to_localstore(msg, _))
 }
 
 fn handle_keyboard(state: State, ev: KeyboardEvent) -> #(State, Effect(Msg)) {
-  let keyboard_disabled = {
-    state.fight |> option.is_some
-    || state.buyables |> list.length > 0
-    || state.active_story |> option.is_some
-    || state.settings.display != state.SettingDisplayHidden
-  }
-
-  use <- bool.guard(keyboard_disabled, state |> no_eff)
+  let overlay_open = state.overlay != state.NoOverlay
+  use <- bool.guard(overlay_open, state |> no_eff)
 
   let location = world.get_location(state.p.location)
   let #(n, e, s, w) = location.connections
@@ -150,7 +140,7 @@ fn handle_move(state: State, location: LocationId) -> #(State, Effect(Msg)) {
         location
         |> enemy.random_location_trouble
         |> option.map(fn(e_id) { fight.start_fight(e_id, p) })
-        |> option.unwrap(GameState(p, state.fight))
+        |> option.unwrap(GameState(p, state |> state.get_fight))
 
       let state = State(..state, p:)
 
@@ -163,7 +153,7 @@ fn handle_move(state: State, location: LocationId) -> #(State, Effect(Msg)) {
 }
 
 fn handle_fight_move(state: State, move: FightMove) -> #(State, Effect(a)) {
-  let assert Some(fight) = state.fight
+  let assert Some(fight) = state |> state.get_fight
     as "Illegal state - fight move outside of fight"
 
   let GameState(p:, fight:) = fight.player_turn(state.p, fight, move)
@@ -174,7 +164,7 @@ fn handle_fight_move(state: State, move: FightMove) -> #(State, Effect(a)) {
     _ -> GameState(p:, fight:)
   }
 
-  State(..state, p:, fight:) |> no_eff
+  State(..state, p:) |> state.set_fight(fight) |> no_eff
 }
 
 fn handle_work(state: State) -> #(State, Effect(Msg)) {
@@ -196,7 +186,8 @@ fn handle_work(state: State) -> #(State, Effect(Msg)) {
   {
     None -> State(..state, p:) |> no_eff
     Some(GameState(p:, fight:)) ->
-      State(..state, p:, fight:)
+      State(..state, p:)
+      |> state.set_fight(fight)
       |> toast_eff("Random job brawl occurred")
   }
 }
@@ -235,8 +226,9 @@ fn handle_shop(state: State, shop: PlayerShopMsg) -> #(State, Effect(Msg)) {
 
   case shop {
     msg.ShopBuy(item:) -> state |> buy(item)
-    msg.ShopClose -> State(..state, buyables: [])
-    msg.ShopOpen(options:) -> State(..state, buyables: options)
+    msg.ShopClose -> State(..state, overlay: state.NoOverlay)
+    msg.ShopOpen(options:) ->
+      State(..state, overlay: state.OverlayShop(options))
   }
   |> no_eff
 }
@@ -279,9 +271,9 @@ fn handle_consumption(state: State, id: ConsumableId) -> #(State, Effect(Msg)) {
 fn handle_story_msg(state: State, msg: StoryMsg) -> #(State, Effect(Msg)) {
   case msg {
     msg.StoryActivate(chap:) ->
-      State(..state, active_story: Some(#(chap, 0))) |> no_eff
+      State(..state, overlay: state.OverlayStory(chap, 0)) |> no_eff
     msg.StoryOptionPick(chap:, node_id:) ->
-      State(..state, active_story: Some(#(chap, node_id))) |> no_eff
+      State(..state, overlay: state.OverlayStory(chap, node_id)) |> no_eff
     msg.StoryChapterComplete(chap) -> {
       let chap = chap |> story.story_chapter
       let p =
@@ -291,7 +283,7 @@ fn handle_story_msg(state: State, msg: StoryMsg) -> #(State, Effect(Msg)) {
         )
         |> chap.effect
 
-      let state = State(..state, p:, active_story: None)
+      let state = State(..state, p:, overlay: state.NoOverlay)
 
       case chap.effect_toast_msg {
         None -> state |> no_eff
@@ -302,7 +294,7 @@ fn handle_story_msg(state: State, msg: StoryMsg) -> #(State, Effect(Msg)) {
 }
 
 fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(Msg)) {
-  let state.Settings(display:, autosave:, autoload:) = state.settings
+  let state.Settings(autosave:, autoload:) = state.settings
 
   let settings = case msg {
     msg.SettingReset -> {
@@ -313,11 +305,7 @@ fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(Msg))
       state.Settings(..state.settings, autoload: autoload |> bool.negate)
     msg.SettingToggleAutosave ->
       state.Settings(..state.settings, autosave: autosave |> bool.negate)
-    msg.SettingToggleDisplay ->
-      state.Settings(..state.settings, display: case display {
-        state.SettingDisplayHidden -> state.SettingDisplaySaveLoad
-        state.SettingDisplaySaveLoad -> state.SettingDisplayHidden
-      })
+    msg.SettingToggleDisplay -> state.settings
   }
 
   case msg {
@@ -330,6 +318,12 @@ fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(Msg))
           |> disp,
       ]),
     )
+    msg.SettingToggleDisplay ->
+      State(..state, overlay: case state.overlay == state.OverlaySaveLoad {
+        False -> state.OverlaySaveLoad
+        True -> state.NoOverlay
+      })
+      |> no_eff
     _ -> State(..state, settings:) |> no_eff
   }
 }
@@ -375,7 +369,7 @@ fn try_save_to_localstore(msg: Msg, state: State) -> State {
       | msg.PlayerShop(_)
       | msg.PlayerConsum(_)
       if state.settings.autosave
-    -> localstore.try_save_game_state(state.p, state.fight)
+    -> localstore.try_save_game_state(state.p, state |> state.get_fight)
     _ -> Nil
   }
   state

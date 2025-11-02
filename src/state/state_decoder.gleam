@@ -7,28 +7,14 @@ import gleam/dynamic/decode.{type Decoder}
 import gleam/set
 import state/state.{
   type Energy, type Fight, type GameState, type Health, type Inventory,
-  type JobId, type Money, type Phase, type Player, type SettingDisplay,
-  type Settings, type Skills, type Stamina,
+  type JobId, type Money, type Phase, type Player, type Settings, type Skills,
+  type Stamina,
 }
 
 pub fn settings_decoder() -> Decoder(Settings) {
-  use display <- decode.field("display", setting_display_decoder())
   use autosave <- decode.field("autosave", decode.bool)
   use autoload <- decode.field("autoload", decode.bool)
-  decode.success(state.Settings(display:, autosave:, autoload:))
-}
-
-fn setting_display_decoder() -> Decoder(SettingDisplay) {
-  use str <- decode.then(decode.string)
-  case str {
-    "Hidden" -> decode.success(state.SettingDisplayHidden)
-    "SaveLoad" -> decode.success(state.SettingDisplaySaveLoad)
-    _ ->
-      decode.failure(
-        state.SettingDisplayHidden,
-        "Invalid SettingDisplay: " <> str,
-      )
-  }
+  decode.success(state.Settings(autosave:, autoload:))
 }
 
 pub fn game_state_decoder() -> Decoder(GameState) {

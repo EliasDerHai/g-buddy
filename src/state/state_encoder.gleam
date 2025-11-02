@@ -9,21 +9,16 @@ import gleam/set
 import gleam/string
 import state/state.{
   type Energy, type Fight, type GameState, type Health, type Inventory,
-  type JobId, type Money, type Phase, type Player, type SettingDisplay,
-  type Settings, type Skills, type Stamina,
+  type JobId, type Money, type Phase, type Player, type Settings, type Skills,
+  type Stamina,
 }
 
 pub fn settings_to_json(settings: Settings) -> Json {
-  let state.Settings(display:, autosave:, autoload:) = settings
+  let state.Settings(autosave:, autoload:) = settings
   json.object([
-    #("display", setting_display_to_json(display)),
     #("autosave", json.bool(autosave)),
     #("autoload", json.bool(autoload)),
   ])
-}
-
-fn setting_display_to_json(display: SettingDisplay) -> Json {
-  display |> string.inspect |> json.string
 }
 
 pub fn game_state_to_json(game_state: GameState) -> Json {

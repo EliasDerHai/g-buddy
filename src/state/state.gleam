@@ -4,23 +4,31 @@ import env/weapon.{type WeaponId}
 import env/world.{type LocationId}
 import gleam/dict.{type Dict}
 import gleam/int
-import gleam/option.{type Option}
+import gleam/option.{type Option, None, Some}
 import gleam/set.{type Set}
 import state/toast.{type Toast}
 
 pub type State {
   State(
     p: Player,
-    // Some == modal fight open
-    fight: Option(Fight),
-    // non-empty == modal shop open
-    buyables: List(Buyable),
     settings: Settings,
-    active_story: Option(#(StoryChapterId, Int)),
+    //   fight: Option(Fight),
+    //   buyables: List(Buyable),
+    //   active_story: Option(#(StoryChapterId, Int)),
+    overlay: Overlay,
     // UI 
     toasts: List(Toast),
     active_tooltip: Option(String),
   )
+}
+
+pub type Overlay {
+  NoOverlay
+  OverlayFight(fight: Fight)
+  OverlayShop(buyables: List(Buyable))
+  OverlaySaveLoad
+  OverlayStory(chapter_id: StoryChapterId, node_id: Int)
+  OverlayQuests
 }
 
 pub type Money {
@@ -101,13 +109,8 @@ pub type Phase {
 }
 
 // settings
-pub type SettingDisplay {
-  SettingDisplayHidden
-  SettingDisplaySaveLoad
-}
-
 pub type Settings {
-  Settings(display: SettingDisplay, autosave: Bool, autoload: Bool)
+  Settings(autosave: Bool, autoload: Bool)
 }
 
 // persistence
@@ -183,5 +186,19 @@ pub fn get_skill(s: Skills, id: SkillId) -> Int {
     Dexterity -> s.dexterity
     Intelligence -> s.intelligence
     Strength -> s.strength
+  }
+}
+
+pub fn get_fight(s: State) -> Option(Fight) {
+  case s.overlay {
+    OverlayFight(fight:) -> Some(fight)
+    _ -> None
+  }
+}
+
+pub fn set_fight(s: State, fight: Option(Fight)) -> State {
+  case fight {
+    None -> State(..s, overlay: NoOverlay)
+    Some(fight) -> State(..s, overlay: OverlayFight(fight))
   }
 }

@@ -46,40 +46,24 @@ pub fn view(s: State) -> Element(Msg) {
         view_right_hud(s),
       ),
     ]),
-    // NOTE: don't forget to update disabling keyboard interaction when adding new modals
     {
-      let #(is_open, content) = case s.fight {
-        None -> #(False, fn() { [] })
-        Some(fight) -> #(True, fn() { fight_view.view_fight(s, fight) })
+      let content = fn() {
+        case s.overlay {
+          state.NoOverlay -> []
+          state.OverlayFight(fight:) -> fight_view.view_fight(s, fight)
+          state.OverlayQuests -> todo
+          state.OverlaySaveLoad -> setting_view.view_settings(s)
+          state.OverlayShop(buyables:) -> shop_view.view_shop(s, buyables)
+          state.OverlayStory(chapter_id:, node_id:) ->
+            story_view.view_story(chapter_id, node_id)
+        }
       }
-      generic_view.modal(is_open, None, content)
-    },
-    {
-      let #(is_open, content) = case s.settings.display {
-        state.SettingDisplayHidden -> #(False, fn() { [] })
-        state.SettingDisplaySaveLoad -> #(True, fn() {
-          setting_view.view_settings(s)
-        })
+      let close = case s.overlay {
+        state.OverlayFight(_) | state.OverlayStory(_, _) -> None
+        _ -> Some(msg.CloseOverlay)
       }
-      generic_view.modal(
-        is_open,
-        Some(msg.SettingChange(msg.SettingToggleDisplay)),
-        content,
-      )
-    },
-    {
-      let #(is_open, content) = case s.buyables {
-        [] -> #(False, fn() { [] })
-        _ -> #(True, fn() { shop_view.view_shop(s) })
-      }
-      generic_view.modal(is_open, Some(PlayerShop(msg.ShopClose)), content)
-    },
-    {
-      let #(is_open, content) = case s.active_story {
-        None -> #(False, fn() { [] })
-        Some(#(a, b)) -> #(True, fn() { story_view.view_story(a, b) })
-      }
-      generic_view.modal(is_open, None, content)
+
+      generic_view.modal(s.overlay != state.NoOverlay, close, content)
     },
     toast.view_toasts(s.toasts),
   ])

@@ -13,12 +13,12 @@ import util/either
 import view/generic_view
 import view/texts
 
-pub fn view_shop(s: State) -> List(Element(Msg)) {
+pub fn view_shop(s: State, buyables: List(Buyable)) -> List(Element(Msg)) {
   [
     "Shop" |> generic_view.heading,
     html.div(
       [attribute.class("flex flex-col gap-4 w-80 m-auto")],
-      s.buyables
+      buyables
         |> list.map(fn(buyable) { view_buyable(s, buyable) }),
     ),
   ]

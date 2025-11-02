@@ -17,6 +17,7 @@ pub type Msg {
   PlayerShop(PlayerShopMsg)
   PlayerConsum(ConsumableId)
   PlayerStory(StoryMsg)
+  CloseOverlay
   KeyDown(KeyboardEvent)
   SettingChange(SettingMsg)
   ToastChange(ToastMsg)

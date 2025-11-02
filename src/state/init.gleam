@@ -2,7 +2,7 @@ import env/enemy.{Lvl1}
 import env/weapon.{NoWeapon}
 import env/world.{NoLocation}
 import gleam/dict
-import gleam/option.{None, Some}
+import gleam/option.{None}
 import gleam/set
 import state/state.{
   Energy, Fight, Health, Inventory, Main, Main01, Money, NoJob, Player,
@@ -10,22 +10,15 @@ import state/state.{
 }
 
 pub fn new_state() {
-  State(
-    new_player(),
-    None,
-    [],
-    state.Settings(state.SettingDisplayHidden, True, True),
-    None,
-    [],
-    None,
-  )
+  State(new_player(), state.Settings(True, True), state.NoOverlay, [], None)
 }
 
 // for debugging
 pub fn new_state_fight() {
   State(
     new_player(),
-    Some(Fight(
+    state.Settings(True, True),
+    state.OverlayFight(Fight(
       PlayerTurn,
       Lvl1 |> enemy.get_enemy,
       state.Stamina(100, 100),
@@ -33,9 +26,6 @@ pub fn new_state_fight() {
       None,
       None,
     )),
-    [],
-    state.Settings(state.SettingDisplayHidden, True, True),
-    None,
     [],
     None,
   )
