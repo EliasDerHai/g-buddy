@@ -3,6 +3,7 @@ import env/enemy
 import env/fight
 import env/job
 import env/shop.{type Buyable, type ConsumableId}
+import env/story
 import env/world.{type LocationId}
 import gleam/bool
 import gleam/dict
@@ -32,15 +33,23 @@ import view/view
 // MAIN ------------------------------------------------------------------------
 
 pub fn main() {
-  let init = fn(_) { #(init(), setup_keyboard_listener()) }
+  let init = fn(_) {
+    #(
+      init(),
+      effect.batch([
+        setup_keyboard_listener(),
+        disp(msg.PlayerMove(world.Apartment)),
+      ]),
+    )
+  }
   let app = lustre.application(init, update, view.view)
   let assert Ok(_) = lustre.start(app, "#app", Nil)
   Nil
 }
 
 fn init() -> State {
-  let new_state = init.new_state_fight()
-  // let new_state = init.new_state()
+  //let new_state = init.new_state_fight()
+  let new_state = init.new_state()
 
   let settings =
     localstore.try_load_settings()
@@ -95,40 +104,6 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
   |> pair.map_first(try_save_to_localstore(msg, _))
 }
 
-fn handle_story_msg(state: State, msg: StoryMsg) -> #(State, Effect(Msg)) {
-  case msg {
-    msg.StoryActivate(chap:) -> State(..state, active_story: Some(#(chap, 0)))
-    msg.StoryChapterComplete(next_chap:, for_line:) -> {
-      let p =
-        Player(
-          ..state.p,
-          story: state.p.story |> dict.insert(for_line, next_chap),
-        )
-      State(..state, p:, active_story: None)
-    }
-    msg.StoryOptionPick(chap:, node_id:) ->
-      State(..state, active_story: Some(#(chap, node_id)))
-  }
-  |> no_eff
-}
-
-fn handle_move(state: State, location: LocationId) -> #(State, Effect(Msg)) {
-  let gs =
-    location
-    |> enemy.random_location_trouble
-    |> option.map(fn(e_id) { fight.start_fight(e_id, state.p) })
-
-  case gs {
-    Some(GameState(p:, fight:)) -> #(
-      State(..state, p: Player(..p, location:), fight:),
-      toast_effect("Random streetfight occurred!"),
-    )
-    None ->
-      State(..state, p: Player(..state.p, location:))
-      |> no_eff
-  }
-}
-
 fn handle_keyboard(state: State, ev: KeyboardEvent) -> #(State, Effect(Msg)) {
   let keyboard_disabled = {
     state.fight |> option.is_some
@@ -148,6 +123,42 @@ fn handle_keyboard(state: State, ev: KeyboardEvent) -> #(State, Effect(Msg)) {
     "s" if s != world.NoLocation -> handle_move(state, s)
     "a" if w != world.NoLocation -> handle_move(state, w)
     _ -> state |> no_eff
+  }
+}
+
+fn handle_move(state: State, location: LocationId) -> #(State, Effect(Msg)) {
+  let p = Player(..state.p, location:)
+
+  let story_activation =
+    p.story
+    |> dict.values
+    |> list.find(fn(chapter_id) {
+      let chap = chapter_id |> story.story_chapter
+      case chap.activation {
+        story.Active(_, _) -> False
+        story.Auto(location) -> p.location == location && chap.condition(p)
+      }
+    })
+    |> option.from_result
+
+  case story_activation {
+    Some(chap) ->
+      State(..state, p:) |> any_eff(msg.PlayerStory(msg.StoryActivate(chap)))
+
+    None -> {
+      let GameState(p:, fight:) =
+        location
+        |> enemy.random_location_trouble
+        |> option.map(fn(e_id) { fight.start_fight(e_id, p) })
+        |> option.unwrap(GameState(p, state.fight))
+
+      let state = State(..state, p:)
+
+      case fight {
+        None -> state |> no_eff
+        Some(_) -> state |> toast_eff("Random streetfight occurred!")
+      }
+    }
   }
 }
 
@@ -184,10 +195,9 @@ fn handle_work(state: State) -> #(State, Effect(Msg)) {
     |> option.map(fn(e_id) { fight.start_fight(e_id, p) })
   {
     None -> State(..state, p:) |> no_eff
-    Some(GameState(p:, fight:)) -> #(
-      State(..state, p:, fight:),
-      toast_effect("Random job brawl occurred"),
-    )
+    Some(GameState(p:, fight:)) ->
+      State(..state, p:, fight:)
+      |> toast_eff("Random job brawl occurred")
   }
 }
 
@@ -263,7 +273,32 @@ fn handle_consumption(state: State, id: ConsumableId) -> #(State, Effect(Msg)) {
       }
     })
 
-  #(State(..state, p:), toast_effect("Consumed " <> id |> texts.consumable))
+  State(..state, p:) |> toast_eff("Consumed " <> id |> texts.consumable)
+}
+
+fn handle_story_msg(state: State, msg: StoryMsg) -> #(State, Effect(Msg)) {
+  case msg {
+    msg.StoryActivate(chap:) ->
+      State(..state, active_story: Some(#(chap, 0))) |> no_eff
+    msg.StoryOptionPick(chap:, node_id:) ->
+      State(..state, active_story: Some(#(chap, node_id))) |> no_eff
+    msg.StoryChapterComplete(chap) -> {
+      let chap = chap |> story.story_chapter
+      let p =
+        Player(
+          ..state.p,
+          story: state.p.story |> dict.insert(chap.line_id, chap.next_chapter),
+        )
+        |> chap.effect
+
+      let state = State(..state, p:, active_story: None)
+
+      case chap.effect_toast_msg {
+        None -> state |> no_eff
+        Some(m) -> state |> toast_eff(m)
+      }
+    }
+  }
 }
 
 fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(Msg)) {
@@ -287,8 +322,13 @@ fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(Msg))
 
   case msg {
     msg.SettingReset -> #(
-      State(..state, settings:),
-      toast_effect("Storage reset"),
+      State(..init(), settings:),
+      effect.batch([
+        msg.ToastChange(msg.ToastAdd(toast.create_info_toast("Storage reset")))
+          |> disp,
+        msg.PlayerMove(world.Apartment)
+          |> disp,
+      ]),
     )
     _ -> State(..state, settings:) |> no_eff
   }
@@ -347,10 +387,24 @@ fn no_eff(a) -> #(a, Effect(b)) {
   #(a, effect.none())
 }
 
-fn toast_effect(info_msg: String) -> Effect(Msg) {
+fn toast_eff(a, info_msg: String) -> #(a, Effect(Msg)) {
+  #(
+    a,
+    effect.from(fn(dispatch) {
+      msg.ToastChange(msg.ToastAdd(toast.create_info_toast(info_msg)))
+      |> dispatch
+      Nil
+    }),
+  )
+}
+
+fn any_eff(a, msg: Msg) -> #(a, Effect(Msg)) {
+  #(a, disp(msg))
+}
+
+fn disp(msg: Msg) -> Effect(Msg) {
   effect.from(fn(dispatch) {
-    msg.ToastChange(msg.ToastAdd(toast.create_info_toast(info_msg)))
-    |> dispatch
+    msg |> dispatch
     Nil
   })
 }

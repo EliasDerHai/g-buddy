@@ -3,7 +3,7 @@ import env/attack.{type AttackMove}
 import env/shop.{type Buyable, type ConsumableId}
 import env/world.{type LocationId}
 import plinth/browser/event.{type Event, type UIEvent}
-import state/state.{type StoryChapterId, type StoryLineId}
+import state/state.{type StoryChapterId}
 import state/toast.{type Toast}
 
 pub type KeyboardEvent =
@@ -40,7 +40,7 @@ pub type PlayerShopMsg {
 pub type StoryMsg {
   StoryActivate(chap: StoryChapterId)
   StoryOptionPick(chap: StoryChapterId, node_id: Int)
-  StoryChapterComplete(next_chap: StoryChapterId, for_line: StoryLineId)
+  StoryChapterComplete(chap: StoryChapterId)
 }
 
 pub type SettingMsg {

@@ -27,7 +27,8 @@ pub fn get_enemy(id: EnemyId) {
   case id {
     Lvl1 -> Enemy(id, 1, dmg: 5, def: 0, crit: 0.05, health: 4, energy: 50)
     Lvl2 -> Enemy(id, 2, dmg: 10, def: 0, crit: 0.15, health: 6, energy: 50)
-    Lvl10 -> Enemy(id, 10, dmg: 5, def: 0, crit: 0.05, health: 4, energy: 50)
+    Lvl10 ->
+      Enemy(id, 10, dmg: 50, def: 10, crit: 0.25, health: 10, energy: 100)
   }
   |> assert_bounds
 }
@@ -63,7 +64,7 @@ fn assert_bounds(s: Enemy) -> Enemy {
 pub fn random_location_trouble(id: LocationId) -> Option(EnemyId) {
   let troubles = case id {
     world.BusStop -> [#(0.01, Lvl1)]
-    world.SlingerCorner -> [#(0.01, Lvl1), #(0.01, Lvl2)]
+    world.DrugCorner -> [#(0.01, Lvl1), #(0.01, Lvl2)]
     _ -> []
   }
 

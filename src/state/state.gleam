@@ -40,6 +40,7 @@ pub type Stamina {
 }
 
 pub type JobId {
+  NoJob
   Lookout
   Slinger
 }
@@ -122,6 +123,7 @@ pub type StoryLineId {
 
 pub type StoryChapterId {
   Main01
+  Main02
 
   Placeholder
 }

@@ -104,7 +104,7 @@ fn location_id_decoder() -> Decoder(LocationId) {
     "Apartment" -> decode.success(world.Apartment)
     "Neighbor" -> decode.success(world.Neighbor)
     "BusStop" -> decode.success(world.BusStop)
-    "SlingerCorner" -> decode.success(world.SlingerCorner)
+    "DrugCorner" -> decode.success(world.DrugCorner)
     "CityCenter" -> decode.success(world.CityCenter)
     "Gym" -> decode.success(world.Gym)
     "GasStation" -> decode.success(world.GasStation)
@@ -116,9 +116,10 @@ fn location_id_decoder() -> Decoder(LocationId) {
 fn job_id_decoder() -> Decoder(JobId) {
   use str <- decode.then(decode.string)
   case str {
+    "NoJob" -> decode.success(state.NoJob)
     "Lookout" -> decode.success(state.Lookout)
     "Slinger" -> decode.success(state.Slinger)
-    _ -> decode.failure(state.Lookout, "Invalid JobId: " <> str)
+    _ -> decode.failure(state.NoJob, "Invalid JobId: " <> str)
   }
 }
 
@@ -236,6 +237,8 @@ fn story_chapter_id_decoder() -> Decoder(state.StoryChapterId) {
   use str <- decode.then(decode.string)
   case str {
     "Main01" -> decode.success(state.Main01)
+    "Main02" -> decode.success(state.Main02)
+    "Placeholder" -> decode.success(state.Placeholder)
     _ -> decode.failure(state.Main01, "Invalid StoryChapterId: " <> str)
   }
 }

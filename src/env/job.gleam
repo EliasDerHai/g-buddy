@@ -22,6 +22,14 @@ pub type Trouble {
 
 pub fn job_stats(id: JobId) {
   case id {
+    state.NoJob ->
+      JobStats(
+        id,
+        base_income: 0,
+        energy_cost: 0,
+        trouble: [],
+        workplace: world.NoLocation,
+      )
     state.Lookout ->
       JobStats(
         id,
@@ -30,7 +38,7 @@ pub fn job_stats(id: JobId) {
         trouble: [
           Trouble(0.1, enemy.Lvl1),
         ],
-        workplace: world.SlingerCorner,
+        workplace: world.DrugCorner,
       )
     state.Slinger ->
       JobStats(
@@ -41,7 +49,7 @@ pub fn job_stats(id: JobId) {
           Trouble(0.1, enemy.Lvl1),
           Trouble(0.1, enemy.Lvl2),
         ],
-        workplace: world.SlingerCorner,
+        workplace: world.DrugCorner,
       )
   }
   |> assert_bounds

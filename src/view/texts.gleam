@@ -14,7 +14,7 @@ pub fn location(id: LocationId) -> String {
     world.Apartment -> "Apartment"
     world.BusStop -> "Bus-Stop"
     world.Neighbor -> "Neighbor"
-    world.SlingerCorner -> "Slinger Corner"
+    world.DrugCorner -> "The Cut"
     world.CityCenter -> "City Center"
     world.Gym -> "Gym"
     world.Arms -> "Arms & Ammu"
@@ -33,6 +33,7 @@ pub fn job(id: JobId) -> String {
   case id {
     state.Lookout -> "Lookout"
     state.Slinger -> "Slinger"
+    state.NoJob -> "-"
   }
 }
 

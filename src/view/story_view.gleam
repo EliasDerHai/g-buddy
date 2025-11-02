@@ -20,7 +20,7 @@ pub fn view_story(chap_id, node_id) -> List(Element(Msg)) {
   let next_node_idx = node_id + 1
   let last_node_idx = list.length(chap.nodes) - 1
   let msg = case next_node_idx > last_node_idx {
-    True -> PlayerStory(StoryChapterComplete(chap.next_chapter, chap.line_id))
+    True -> PlayerStory(StoryChapterComplete(chap_id))
     False -> PlayerStory(StoryOptionPick(chap_id, next_node_idx))
   }
 

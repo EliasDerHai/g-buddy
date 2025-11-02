@@ -29,7 +29,11 @@ pub fn view(s: State) -> Element(Msg) {
   html.div([], [
     html.div([attribute.class("flex h-screen w-screen")], [
       html.div(
-        [attribute.class("bg-neutral-900 w-64 flex flex-col p-8")],
+        [
+          attribute.class(
+            "bg-neutral-900 w-64 flex flex-col p-8 justify-between",
+          ),
+        ],
         view_left_hud(s),
       ),
       html.div([attribute.class("flex-1")], view_navigation_buttons(s)),
@@ -83,25 +87,39 @@ pub fn view(s: State) -> Element(Msg) {
 
 fn view_left_hud(model: State) -> List(Element(Msg)) {
   [
-    "Health: " <> model.p.health.v |> int.to_string,
-    "Energy: " <> model.p.energy.v |> int.to_string,
-    "Job: " <> model.p.job |> texts.job,
-  ]
-  |> list.map(generic_view.simple_text)
-  |> list.append([
-    "Items:" |> generic_view.simple_text,
     html.div(
-      [attribute.class("flex flex-col gap-2 top-2")],
-      model.p.inventory.consumables
-        |> dict.to_list
-        |> list.map(fn(tuple) {
-          let #(consumable_id, amount) = tuple
-          let text =
-            consumable_id |> texts.consumable <> " x" <> amount |> int.to_string
-          generic_view.button(text, msg.PlayerConsum(consumable_id))
-        }),
+      [attribute.class("flex flex-col")],
+      [
+        "Health: " <> model.p.health.v |> int.to_string,
+        "Energy: " <> model.p.energy.v |> int.to_string,
+        "Job: " <> model.p.job |> texts.job,
+      ]
+        |> list.map(generic_view.simple_text)
+        |> list.append([
+          "Items:" |> generic_view.simple_text,
+          html.div(
+            [attribute.class("flex flex-col gap-2 top-2")],
+            model.p.inventory.consumables
+              |> dict.to_list
+              |> list.map(fn(tuple) {
+                let #(consumable_id, amount) = tuple
+                let text =
+                  consumable_id |> texts.consumable
+                  <> " x"
+                  <> amount |> int.to_string
+                generic_view.button(text, msg.PlayerConsum(consumable_id))
+              }),
+          ),
+        ]),
     ),
-  ])
+    html.div([], [
+      generic_view.button_with_icon(
+        icons.scroll_text([]),
+        "Quests",
+        msg.SettingChange(msg.SettingToggleDisplay),
+      ),
+    ]),
+  ]
 }
 
 fn view_right_hud(model: State) -> List(Element(Msg)) {
