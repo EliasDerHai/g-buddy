@@ -20,6 +20,7 @@ import util/list_extension
 import view/fight_view
 import view/generic_view
 import view/icons
+import view/quests_view
 import view/setting_view
 import view/shop_view
 import view/story_view
@@ -51,7 +52,7 @@ pub fn view(s: State) -> Element(Msg) {
         case s.overlay {
           state.NoOverlay -> []
           state.OverlayFight(fight:) -> fight_view.view_fight(s, fight)
-          state.OverlayQuests -> todo
+          state.OverlayQuests -> quests_view.view_quests(s)
           state.OverlaySaveLoad -> setting_view.view_settings(s)
           state.OverlayShop(buyables:) -> shop_view.view_shop(s, buyables)
           state.OverlayStory(chapter_id:, node_id:) ->
@@ -100,7 +101,7 @@ fn view_left_hud(model: State) -> List(Element(Msg)) {
       generic_view.button_with_icon(
         icons.scroll_text([]),
         "Quests",
-        msg.SettingChange(msg.SettingToggleDisplay),
+        msg.OpenOverlay(state.OverlayQuests),
       ),
     ]),
   ]

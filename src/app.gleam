@@ -95,6 +95,8 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.SettingChange(msg) -> handle_setting_toggle(state, msg)
     msg.ToastChange(msg) -> handle_toast(state, msg)
     msg.TooltipChange(msg) -> handle_tooltip(state, msg)
+    // TODO: remove other msgs and use OpenOverlay instead of various others
+    msg.OpenOverlay(overlay) -> State(..state, overlay:) |> no_eff
     msg.CloseOverlay -> State(..state, overlay: state.NoOverlay) |> no_eff
   }
   |> pair.map_first(try_save_to_localstore(msg, _))
