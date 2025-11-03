@@ -19,6 +19,7 @@ pub fn location(id: LocationId) -> String {
     world.Gym -> "Gym"
     world.Arms -> "Arms & Ammu"
     world.GasStation -> "Gas station"
+    world.FightClub -> "Fight Club"
   }
 }
 
@@ -47,13 +48,14 @@ pub fn enemy(id: EnemyId) -> String {
 
 pub fn action(id: ActionId) {
   case id {
-    action.BusTo(dest) ->
+    action.ActionBusTo(dest) ->
       "Bus to "
       <> dest
       |> location
-    action.WorkoutStrength -> "Workout (str)"
-    action.WorkoutDexterity -> "Workout (dex)"
-    action.Sleep -> "End day"
+    action.ActionWorkoutStrength -> "Workout (str)"
+    action.ActionWorkoutDexterity -> "Workout (dex)"
+    action.ActionSleep -> "End day"
+    action.ActionFightClubFight(f) -> "Fight (" <> f |> enemy <> ")"
   }
 }
 

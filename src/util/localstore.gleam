@@ -6,6 +6,7 @@ import plinth/javascript/storage
 import state/state.{type Fight, type GameState, type Player, type Settings}
 import state/state_decoder
 import state/state_encoder
+import util/fun
 
 const settings_key = "settings"
 
@@ -29,7 +30,13 @@ fn log_e(e: PersistenceError) {
 }
 
 pub fn reset() {
-  storage.local() |> result.map(storage.clear)
+  case storage.local() {
+    Error(_) -> Nil
+    Ok(storage) ->
+      storage
+      |> storage.set_item(game_state_key, "")
+      |> fun.swallow
+  }
 }
 
 // Settings persistence -------------------------------

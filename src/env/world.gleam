@@ -4,7 +4,7 @@ import gleam/result
 // MAP LAYOUT (n-e-s-w connections)
 // ================================
 //
-//                                  DrugCorner-------Arms&Ammu
+//                 FightClub--------DrugCorner-------Arms&Ammu
 //                                      |
 //                                      |
 //                GasStation-------- BusStop -------- Neighbor
@@ -34,6 +34,7 @@ pub type LocationId {
   DrugCorner
   Arms
   GasStation
+  FightClub
 
   CityCenter
   Gym
@@ -49,6 +50,7 @@ const all_location_ids = [
   Gym,
   Arms,
   GasStation,
+  FightClub,
 ]
 
 pub type LocationNode {
@@ -72,6 +74,7 @@ pub fn get_location(id: LocationId) -> LocationNode {
       Gym -> #(NoLocation, NoLocation)
       Arms -> #(NoLocation, NoLocation)
       GasStation -> #(NoLocation, BusStop)
+      FightClub -> #(NoLocation, DrugCorner)
     }
     #(id, n, e)
   }

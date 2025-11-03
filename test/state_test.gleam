@@ -29,3 +29,7 @@ fn roundtrip(state: state.State) {
 
   actual |> should.equal(state)
 }
+
+pub fn division_test() {
+  should.equal(3, 19 / 5)
+}

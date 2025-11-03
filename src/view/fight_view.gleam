@@ -1,4 +1,5 @@
 import env/attack.{type AttackMove}
+import env/fight_types
 import env/weapon
 import gleam/float
 import gleam/int
@@ -22,6 +23,13 @@ import view/tooltip
 
 pub fn view_fight(state: State, fight: Fight) -> List(Element(Msg)) {
   let p = state.p
+  let weapon.WeaponStat(id: _, dmg: dmg_weap, def: def_weap, crit: crit_weap) =
+    p.equipped_weapon |> weapon.weapon_stats
+  let #(dmg_skill, def_skill, crit_skill) = p.skills |> state.skill_dmg_def
+
+  let dmg = fight_types.add_dmg(dmg_weap, dmg_skill)
+  let def = fight_types.add_def(def_weap, def_skill)
+  let crit = fight_types.add_crit(crit_weap, crit_skill)
 
   [
     "Fight!" |> generic_view.heading,
@@ -47,10 +55,23 @@ pub fn view_fight(state: State, fight: Fight) -> List(Element(Msg)) {
               <> int.to_string(fight.stamina.max),
             ),
           ]),
+          html.p([], [
+            html.text("Dmg: " <> dmg.v |> int.to_string),
+          ]),
+          html.p([], [
+            html.text("Def: " <> def.v |> int.to_string),
+          ]),
+          html.p([], [
+            html.text(
+              "Crit: "
+              <> { crit.v |> float.to_precision(2) } *. 100.0 |> float.to_string
+              <> "%",
+            ),
+          ]),
         ]
           |> list_extension.append_when(
             fight.last_player_dmg |> option.is_some(),
-            html.p([attribute.class("text-red-100")], [
+            html.p([attribute.class("text-red-300")], [
               html.text(
                 "Dmg dealt: "
                 <> fight.last_player_dmg |> option.unwrap(0) |> int.to_string,
@@ -68,7 +89,7 @@ pub fn view_fight(state: State, fight: Fight) -> List(Element(Msg)) {
         ]
           |> list_extension.append_when(
             fight.last_enemy_dmg |> option.is_some(),
-            html.p([attribute.class("text-red-100")], [
+            html.p([attribute.class("text-red-300")], [
               html.text(
                 "Dmg dealt: "
                 <> fight.last_enemy_dmg |> option.unwrap(0) |> int.to_string,
@@ -136,13 +157,13 @@ pub fn view_attack_button(state: State, attack: AttackMove) -> Element(Msg) {
   |> tooltip.tooltip_top(
     state.active_tooltip,
     "attack-" <> attack.id |> string.inspect,
-    fn() { tooltip(state, attack) },
+    fn() { tooltip(attack) },
   )
 }
 
-fn tooltip(state: State, attack: AttackMove) {
-  let weapon.WeaponStat(id: _, dmg:, def:, crit:) =
-    state.p.equipped_weapon |> weapon.weapon_stats
+fn tooltip(attack: AttackMove) {
+  let attack.AttackMove(id: _, requirements: _, stamina_cost:, dmg:, crit:) =
+    attack
 
   [
     html.div([attribute.class("space-y-2")], [
@@ -154,29 +175,23 @@ fn tooltip(state: State, attack: AttackMove) {
           html.span([attribute.class("text-gray-400")], [
             html.text("Stamina Cost:"),
           ]),
-          html.text(" " <> int.to_string(attack.stamina_cost)),
+          html.text(stamina_cost |> int.to_string),
         ]),
         html.div([attribute.class("flex flex-col")], [
           html.span([attribute.class("text-gray-400")], [
-            html.text("Damage: "),
+            html.text("Damage:"),
           ]),
-          html.text(" " <> dmg |> int.to_string),
+          html.text("+" <> dmg.v |> int.to_string),
         ]),
         html.div([attribute.class("flex flex-col")], [
           html.span([attribute.class("text-gray-400")], [
-            html.text("Crit Chance: "),
+            html.text("Crit Chance:"),
           ]),
           html.text(
-            " "
-            <> { crit |> float.to_precision(2) } *. 100.0 |> float.to_string
+            "+"
+            <> { crit.v |> float.to_precision(2) } *. 100.0 |> float.to_string
             <> "%",
           ),
-        ]),
-        html.div([attribute.class("flex flex-col")], [
-          html.span([attribute.class("text-gray-400")], [
-            html.text("Defence: "),
-          ]),
-          html.text(" " <> def |> int.to_string),
         ]),
       ]),
     ]),

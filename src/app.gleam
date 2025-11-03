@@ -1,9 +1,11 @@
 import env/action.{type Action}
-import env/enemy
+import env/enemy.{Enemy}
 import env/fight
+import env/fight_types
 import env/job
 import env/shop.{type Buyable, type ConsumableId}
 import env/story
+import env/weapon
 import env/world.{type LocationId}
 import gleam/bool
 import gleam/dict
@@ -22,7 +24,10 @@ import plinth/browser/document
 import plinth/browser/event
 import state/check
 import state/init
-import state/state.{type State, GameState, Inventory, Player, State}
+import state/state.{
+  type Fight, type GameState, type Player, type State, EnemyTurn, Fight,
+  GameState, Inventory, Player, PlayerWon, State,
+}
 import state/toast
 import util/either.{Left, Right}
 import util/localstore
@@ -158,7 +163,7 @@ fn handle_fight_move(state: State, move: FightMove) -> #(State, Effect(a)) {
   let assert Some(fight) = state |> state.get_fight
     as "Illegal state - fight move outside of fight"
 
-  let GameState(p:, fight:) = fight.player_turn(state.p, fight, move)
+  let GameState(p:, fight:) = player_turn(state.p, fight, move)
 
   // immediately do enemy-turn (if it's his turn)
   let GameState(p:, fight:) = case fight {
@@ -167,6 +172,87 @@ fn handle_fight_move(state: State, move: FightMove) -> #(State, Effect(a)) {
   }
 
   State(..state, p:) |> state.set_fight(fight) |> no_eff
+}
+
+fn player_turn(p: Player, fight: Fight, move: FightMove) -> GameState {
+  case move {
+    msg.FightAttack(move) -> {
+      let assert state.PlayerTurn = fight.phase
+        as "Illegal state - cannot attack, not player's turn"
+      let assert True = move.stamina_cost <= fight.stamina.v
+        as "Illegal state - not enough stamina"
+
+      let weapon.WeaponStat(id: _, dmg:, def: _, crit:) =
+        p.equipped_weapon |> weapon.weapon_stats
+      let #(skill_dmg, _, crit_def) = state.skill_dmg_def(p.skills)
+
+      // TODO: UI for this
+      let dmg = dmg |> fight_types.add_dmg(skill_dmg)
+      let crit = crit |> fight_types.add_crit(crit_def)
+
+      let real_dmg = fight.dmg_calc(dmg, crit, fight.enemy.def)
+      let health = fight.enemy.health - real_dmg
+      let stamina = fight.stamina |> state.add_stamina(-move.stamina_cost)
+
+      let enemy = Enemy(..fight.enemy, health:)
+      let next_phase = case enemy.health > 0 {
+        True -> EnemyTurn
+        False -> PlayerWon(reward: enemy.get_victory_reward(enemy))
+      }
+
+      let fight =
+        Some(
+          Fight(
+            ..fight,
+            phase: next_phase,
+            enemy:,
+            stamina:,
+            last_player_dmg: Some(real_dmg),
+            last_enemy_dmg: case next_phase {
+              PlayerWon(_) -> None
+              _ -> fight.last_enemy_dmg
+            },
+          ),
+        )
+
+      GameState(p:, fight:)
+    }
+    msg.FightRegenStamina ->
+      GameState(
+        p:,
+        fight: Some(
+          Fight(
+            ..fight,
+            phase: EnemyTurn,
+            stamina: fight.stamina |> state.refill_stamina,
+            last_player_dmg: None,
+          ),
+        ),
+      )
+    msg.FightFlee ->
+      GameState(
+        p:,
+        fight: Some(
+          Fight(
+            ..fight,
+            phase: EnemyTurn,
+            flee_pending: True,
+            last_player_dmg: None,
+          ),
+        ),
+      )
+    msg.FightEnd -> {
+      let assert True = fight.phase |> fight.is_finite_phase as "Illegal state"
+
+      let p = case fight.phase {
+        PlayerWon(reward:) ->
+          Player(..p, money: p.money |> state.add_money(reward))
+        _ -> p
+      }
+
+      GameState(p:, fight: None)
+    }
+  }
 }
 
 fn handle_work(state: State) -> #(State, Effect(Msg)) {

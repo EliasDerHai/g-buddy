@@ -1,8 +1,10 @@
 import env/enemy.{type Enemy}
+import env/fight_types
 import env/shop.{type Buyable, type ConsumableId}
 import env/weapon.{type WeaponId}
 import env/world.{type LocationId}
 import gleam/dict.{type Dict}
+import gleam/float
 import gleam/int
 import gleam/option.{type Option, None, Some}
 import gleam/set.{type Set}
@@ -12,11 +14,7 @@ pub type State {
   State(
     p: Player,
     settings: Settings,
-    //   fight: Option(Fight),
-    //   buyables: List(Buyable),
-    //   active_story: Option(#(StoryChapterId, Int)),
     overlay: Overlay,
-    // UI 
     toasts: List(Toast),
     active_tooltip: Option(String),
   )
@@ -189,6 +187,15 @@ pub fn get_skill(s: Skills, id: SkillId) -> Int {
   }
 }
 
+pub fn skill_dmg_def(
+  s: Skills,
+) -> #(fight_types.Dmg, fight_types.Def, fight_types.Crit) {
+  let dmg = s.strength / 5
+  let def = s.strength / 5
+  let crit = { s.dexterity / 3 |> int.to_float } *. 0.05 |> float.min(1.0)
+  #(fight_types.Dmg(dmg), fight_types.Def(def), fight_types.Crit(crit))
+}
+
 pub fn get_fight(s: State) -> Option(Fight) {
   case s.overlay {
     OverlayFight(fight:) -> Some(fight)
@@ -201,4 +208,8 @@ pub fn set_fight(s: State, fight: Option(Fight)) -> State {
     None -> State(..s, overlay: NoOverlay)
     Some(fight) -> State(..s, overlay: OverlayFight(fight))
   }
+}
+
+pub fn set_p(s: State, p: Player) {
+  State(..s, p:)
 }

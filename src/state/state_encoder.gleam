@@ -1,4 +1,5 @@
 import env/enemy.{type Enemy, type EnemyId}
+import env/fight_types.{type Crit, type Def, type Dmg}
 import env/shop.{type ConsumableId}
 import env/weapon.{type WeaponId}
 import env/world.{type LocationId}
@@ -173,14 +174,29 @@ fn phase_to_json(phase: Phase) -> Json {
   }
 }
 
+fn dmg_to_json(dmg: Dmg) -> Json {
+  let fight_types.Dmg(v:) = dmg
+  json.object([#("v", json.int(v))])
+}
+
+fn def_to_json(def: Def) -> Json {
+  let fight_types.Def(v:) = def
+  json.object([#("v", json.int(v))])
+}
+
+fn crit_to_json(crit: Crit) -> Json {
+  let fight_types.Crit(v:) = crit
+  json.object([#("v", json.float(v))])
+}
+
 fn enemy_to_json(enemy: Enemy) -> Json {
   let enemy.Enemy(id:, lvl:, dmg:, def:, crit:, health:, energy:) = enemy
   json.object([
     #("id", enemy_id_to_json(id)),
     #("lvl", json.int(lvl)),
-    #("dmg", json.int(dmg)),
-    #("def", json.int(def)),
-    #("crit", json.float(crit)),
+    #("dmg", dmg_to_json(dmg)),
+    #("def", def_to_json(def)),
+    #("crit", crit_to_json(crit)),
     #("health", json.int(health)),
     #("energy", json.int(energy)),
   ])

@@ -1,3 +1,4 @@
+import env/fight_types.{type Crit, type Def, type Dmg, Crit, Def, Dmg}
 import env/world.{type LocationId}
 import gleam/float
 import gleam/list
@@ -15,9 +16,9 @@ pub type Enemy {
   Enemy(
     id: EnemyId,
     lvl: Int,
-    dmg: Int,
-    def: Int,
-    crit: Float,
+    dmg: Dmg,
+    def: Def,
+    crit: Crit,
     health: Int,
     energy: Int,
   )
@@ -25,10 +26,36 @@ pub type Enemy {
 
 pub fn get_enemy(id: EnemyId) {
   case id {
-    Lvl1 -> Enemy(id, 1, dmg: 5, def: 0, crit: 0.05, health: 4, energy: 50)
-    Lvl2 -> Enemy(id, 2, dmg: 10, def: 0, crit: 0.15, health: 6, energy: 50)
+    Lvl1 ->
+      Enemy(
+        id,
+        1,
+        dmg: 5 |> Dmg,
+        def: 0 |> Def,
+        crit: 0.05 |> Crit,
+        health: 4,
+        energy: 50,
+      )
+    Lvl2 ->
+      Enemy(
+        id,
+        2,
+        dmg: 10 |> Dmg,
+        def: 0 |> Def,
+        crit: 0.15 |> Crit,
+        health: 6,
+        energy: 50,
+      )
     Lvl10 ->
-      Enemy(id, 10, dmg: 50, def: 10, crit: 0.25, health: 10, energy: 100)
+      Enemy(
+        id,
+        10,
+        dmg: 50 |> Dmg,
+        def: 10 |> Def,
+        crit: 0.25 |> Crit,
+        health: 10,
+        energy: 100,
+      )
   }
   |> assert_bounds
 }
@@ -53,10 +80,10 @@ fn assert_bounds(s: Enemy) -> Enemy {
     }
   }
 
-  check(s.dmg >= 0, "neg dmg")
-  check(s.def >= 0, "neg def")
-  check(s.crit >=. 0.0, "neg crit")
-  check(s.crit <=. 1.0, "more than 100% crit chance")
+  check(s.dmg.v >= 0, "neg dmg")
+  check(s.def.v >= 0, "neg def")
+  check(s.crit.v >=. 0.0, "neg crit")
+  check(s.crit.v <=. 1.0, "more than 100% crit chance")
   check(s.health >= 0, "neg health")
   s
 }
