@@ -1,7 +1,7 @@
 import env/action.{type Action}
 import env/enemy.{Enemy}
 import env/fight
-import env/fight_types
+import env/fight_types.{Crit, Dmg}
 import env/job
 import env/shop.{type Buyable, type ConsumableId}
 import env/story
@@ -182,13 +182,16 @@ fn player_turn(p: Player, fight: Fight, move: FightMove) -> GameState {
       let assert True = move.stamina_cost <= fight.stamina.v
         as "Illegal state - not enough stamina"
 
-      let weapon.WeaponStat(id: _, dmg:, def: _, crit:) =
+      let weapon.WeaponStat(id: _, dmg: weapon_dmg, def: _, crit: weapon_crit) =
         p.equipped_weapon |> weapon.weapon_stats
-      let #(skill_dmg, _, crit_def) = state.skill_dmg_def(p.skills)
+      let #(skill_dmg, _, skill_crit) = state.skill_dmg_def(p.skills)
 
-      // TODO: UI for this
-      let dmg = dmg |> fight_types.add_dmg(skill_dmg)
-      let crit = crit |> fight_types.add_crit(crit_def)
+      let dmg =
+        [weapon_dmg, skill_dmg, move.dmg]
+        |> list.fold(Dmg(0), fight_types.add_dmg)
+      let crit =
+        [weapon_crit, skill_crit, move.crit]
+        |> list.fold(Crit(0.0), fight_types.add_crit)
 
       let real_dmg = fight.dmg_calc(dmg, crit, fight.enemy.def)
       let health = fight.enemy.health - real_dmg

@@ -56,17 +56,66 @@ pub fn view_fight(state: State, fight: Fight) -> List(Element(Msg)) {
             ),
           ]),
           html.p([], [
-            html.text("Dmg: " <> dmg.v |> int.to_string),
+            html.text("Dmg: " <> dmg.v |> int.to_string)
+            |> tooltip.tooltip_top(state.active_tooltip, "dmg", fn() {
+              [
+                html.div([attribute.class("space-y-2")], [
+                  html.h4([attribute.class("font-bold text-lg")], [
+                    html.text("Dmg:"),
+                  ]),
+                  html.div([attribute.class("grid grid-cols-2 gap-2 text-sm")], [
+                    "Body (str):" |> generic_view.simple_text,
+                    dmg_skill |> fight_types.dmg_str |> generic_view.simple_text,
+                    "Weapon:" |> generic_view.simple_text,
+                    dmg_weap |> fight_types.dmg_str |> generic_view.simple_text,
+                  ]),
+                ]),
+              ]
+            }),
           ]),
           html.p([], [
-            html.text("Def: " <> def.v |> int.to_string),
+            html.text("Def: " <> def.v |> int.to_string)
+            |> tooltip.tooltip_top(state.active_tooltip, "def", fn() {
+              [
+                html.div([attribute.class("space-y-2")], [
+                  html.h4([attribute.class("font-bold text-lg")], [
+                    html.text("Def:"),
+                  ]),
+                  html.div([attribute.class("grid grid-cols-2 gap-2 text-sm")], [
+                    "Body (str):" |> generic_view.simple_text,
+                    def_skill |> fight_types.def_str |> generic_view.simple_text,
+                    "Weapon:" |> generic_view.simple_text,
+                    def_weap |> fight_types.def_str |> generic_view.simple_text,
+                  ]),
+                ]),
+              ]
+            }),
           ]),
           html.p([], [
             html.text(
               "Crit: "
               <> { crit.v |> float.to_precision(2) } *. 100.0 |> float.to_string
               <> "%",
-            ),
+            )
+            |> tooltip.tooltip_top(state.active_tooltip, "crit", fn() {
+              [
+                html.div([attribute.class("space-y-2")], [
+                  html.h4([attribute.class("font-bold text-lg")], [
+                    html.text("Crit:"),
+                  ]),
+                  html.div([attribute.class("grid grid-cols-2 gap-2 text-sm")], [
+                    "Body (dex):" |> generic_view.simple_text,
+                    crit_skill
+                      |> fight_types.crit_str
+                      |> generic_view.simple_text,
+                    "Weapon:" |> generic_view.simple_text,
+                    crit_weap
+                      |> fight_types.crit_str
+                      |> generic_view.simple_text,
+                  ]),
+                ]),
+              ]
+            }),
           ]),
         ]
           |> list_extension.append_when(
@@ -85,7 +134,18 @@ pub fn view_fight(state: State, fight: Fight) -> List(Element(Msg)) {
           html.p([attribute.class("font-bold")], [
             html.text(texts.enemy(fight.enemy.id)),
           ]),
-          html.p([], [html.text("HP: " <> int.to_string(fight.enemy.health))]),
+          html.p([], [html.text("Hp: " <> int.to_string(fight.enemy.health))]),
+          // symmetry with player (no stamina)
+          html.br([]),
+          html.p([], [
+            html.text("Dmg: " <> fight.enemy.dmg |> fight_types.dmg_str),
+          ]),
+          html.p([], [
+            html.text("Def: " <> fight.enemy.def |> fight_types.def_str),
+          ]),
+          html.p([], [
+            html.text("Crit: " <> fight.enemy.crit |> fight_types.crit_str),
+          ]),
         ]
           |> list_extension.append_when(
             fight.last_enemy_dmg |> option.is_some(),
@@ -157,11 +217,11 @@ pub fn view_attack_button(state: State, attack: AttackMove) -> Element(Msg) {
   |> tooltip.tooltip_top(
     state.active_tooltip,
     "attack-" <> attack.id |> string.inspect,
-    fn() { tooltip(attack) },
+    fn() { attack_tooltip(attack) },
   )
 }
 
-fn tooltip(attack: AttackMove) {
+fn attack_tooltip(attack: AttackMove) {
   let attack.AttackMove(id: _, requirements: _, stamina_cost:, dmg:, crit:) =
     attack
 

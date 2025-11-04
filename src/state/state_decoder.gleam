@@ -96,6 +96,7 @@ fn location_id_decoder() -> Decoder(LocationId) {
     "Gym" -> decode.success(world.Gym)
     "GasStation" -> decode.success(world.GasStation)
     "Arms" -> decode.success(world.Arms)
+    "FightClub" -> decode.success(world.FightClub)
     _ -> decode.failure(world.NoLocation, "Invalid LocationId: " <> str)
   }
 }
