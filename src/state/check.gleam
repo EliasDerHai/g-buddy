@@ -6,6 +6,7 @@ import state/state.{type Player}
 
 pub type DeniedReason {
   Insufficient(ActionActivationCost)
+  AlreadyOwned
 }
 
 pub fn check_work(p: Player) -> Option(DeniedReason) {

@@ -41,7 +41,7 @@ fn new_player() {
     NoJob,
     0,
     Skills(0, 0, 0, 0),
-    Inventory(set.new(), dict.new()),
+    Inventory(set.new() |> set.insert(NoWeapon), dict.new()),
     dict.from_list([#(Main, Main01)]),
   )
 }

@@ -1,6 +1,7 @@
 import gleam/bool
 import gleam/list
 import gleam/option.{type Option, None, Some}
+import gleam/result
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
@@ -261,4 +262,40 @@ pub fn modal(
       ],
     ),
   ])
+}
+
+pub type SelectOption(value) {
+  SelectOption(value: value, label: String)
+}
+
+/// Select dropdown with consistent button styling
+pub fn select(
+  current_value: value,
+  options: List(SelectOption(value)),
+  on_change: fn(value) -> Msg,
+  value_to_string: fn(value) -> String,
+) -> Element(Msg) {
+  html.select(
+    [
+      attribute.class(
+        "w-full px-6 py-3 rounded-lg font-medium transition-colors bg-gray-600 text-white hover:bg-gray-700 cursor-pointer text-sm",
+      ),
+      event.on_change(fn(e) {
+        options
+        |> list.find(fn(opt) { value_to_string(opt.value) == e })
+        |> result.map(fn(opt) { on_change(opt.value) })
+        |> result.unwrap(msg.Noop)
+      }),
+    ],
+    options
+      |> list.map(fn(opt) {
+        html.option(
+          [
+            attribute.value(value_to_string(opt.value)),
+            attribute.selected(opt.value == current_value),
+          ],
+          opt.label,
+        )
+      }),
+  )
 }

@@ -65,6 +65,7 @@ pub fn disabled_reason(id: DeniedReason) -> String {
       "Not enough energy (requires ⚡️" <> cost |> int.to_string <> ")"
     check.Insufficient(action.Money(cost:)) ->
       "Not enough money (price $" <> cost |> int.to_string <> ")"
+    check.AlreadyOwned -> "Already owned"
   }
 }
 

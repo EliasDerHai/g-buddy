@@ -1,6 +1,7 @@
 import env/action.{type Action}
 import env/attack.{type AttackMove}
 import env/shop.{type Buyable, type ConsumableId}
+import env/weapon.{type WeaponId}
 import env/world.{type LocationId}
 import plinth/browser/event.{type Event, type UIEvent}
 import state/state.{type Overlay, type StoryChapterId}
@@ -17,6 +18,7 @@ pub type Msg {
   PlayerShop(PlayerShopMsg)
   PlayerConsum(ConsumableId)
   PlayerStory(StoryMsg)
+  PlayerEquipWeapon(WeaponId)
   OpenOverlay(Overlay)
   CloseOverlay
   KeyDown(KeyboardEvent)

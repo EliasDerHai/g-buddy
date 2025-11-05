@@ -5,7 +5,7 @@ import env/fight_types.{Crit, Dmg}
 import env/job
 import env/shop.{type Buyable, type ConsumableId}
 import env/story
-import env/weapon
+import env/weapon.{type WeaponId}
 import env/world.{type LocationId}
 import gleam/bool
 import gleam/dict
@@ -39,41 +39,42 @@ import view/view
 
 pub fn main() {
   let init = fn(_) {
-    #(
-      init(),
-      effect.batch([
-        setup_keyboard_listener(),
-        disp(msg.PlayerMove(world.Apartment)),
-      ]),
-    )
+    init()
+    |> pair.map_second(fn(eff) {
+      effect.batch([setup_keyboard_listener(), eff])
+    })
   }
   let app = lustre.application(init, update, view.view)
   let assert Ok(_) = lustre.start(app, "#app", Nil)
   Nil
 }
 
-fn init() -> State {
+fn init() -> #(State, Effect(Msg)) {
   //let new_state = init.new_state_fight()
   let new_state = init.new_state()
+  let new_state_effect = disp(msg.PlayerMove(world.Apartment))
 
   let settings =
     localstore.try_load_settings()
     |> option.unwrap(new_state.settings)
 
-  let #(p, overlay) = case settings.autoload {
-    False -> #(new_state.p, new_state.overlay)
+  let #(p, overlay, eff) = case settings.autoload {
+    False -> #(new_state.p, new_state.overlay, new_state_effect)
     True -> {
       case localstore.try_load_game_state() {
-        Some(GameState(p:, fight:)) -> #(p, case fight {
-          None -> new_state.overlay
-          Some(f) -> state.OverlayFight(f)
-        })
-        None -> #(new_state.p, new_state.overlay)
+        Some(GameState(p:, fight:)) -> {
+          let overlay = case fight {
+            None -> new_state.overlay
+            Some(f) -> state.OverlayFight(f)
+          }
+          #(p, overlay, effect.none())
+        }
+        None -> #(new_state.p, new_state.overlay, new_state_effect)
       }
     }
   }
 
-  State(p:, overlay:, settings:, toasts: [], active_tooltip: None)
+  #(State(p:, overlay:, settings:, toasts: [], active_tooltip: None), eff)
 }
 
 fn setup_keyboard_listener() -> Effect(Msg) {
@@ -95,6 +96,7 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.PlayerShop(shop) -> handle_shop(state, shop)
     msg.PlayerConsum(item) -> handle_consumption(state, item)
     msg.PlayerStory(msg) -> handle_story_msg(state, msg)
+    msg.PlayerEquipWeapon(w) -> handle_weapon_equip(state, w)
     msg.KeyDown(key) -> handle_keyboard(state, key)
     msg.Noop -> state |> no_eff
     msg.SettingChange(msg) -> handle_setting_toggle(state, msg)
@@ -115,10 +117,10 @@ fn handle_keyboard(state: State, ev: KeyboardEvent) -> #(State, Effect(Msg)) {
   let #(n, e, s, w) = location.connections
 
   case ev |> event.key |> string.lowercase {
-    "w" if n != world.NoLocation -> handle_move(state, n)
-    "d" if e != world.NoLocation -> handle_move(state, e)
-    "s" if s != world.NoLocation -> handle_move(state, s)
-    "a" if w != world.NoLocation -> handle_move(state, w)
+    "w" if n != world.NoLocation -> state |> any_eff(msg.PlayerMove(n))
+    "d" if e != world.NoLocation -> state |> any_eff(msg.PlayerMove(e))
+    "s" if s != world.NoLocation -> state |> any_eff(msg.PlayerMove(s))
+    "a" if w != world.NoLocation -> state |> any_eff(msg.PlayerMove(w))
     _ -> state |> no_eff
   }
 }
@@ -384,6 +386,15 @@ fn handle_story_msg(state: State, msg: StoryMsg) -> #(State, Effect(Msg)) {
   }
 }
 
+fn handle_weapon_equip(state: State, w: WeaponId) -> #(State, Effect(Msg)) {
+  case state.p.inventory.collected_weapons |> set.contains(w) {
+    False -> panic as "Cannot equip weapon that's not in inventory"
+    True -> Nil
+  }
+
+  state.set_p(state, Player(..state.p, equipped_weapon: w)) |> no_eff
+}
+
 fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(Msg)) {
   let state.Settings(autosave:, autoload:) = state.settings
 
@@ -400,15 +411,18 @@ fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(Msg))
   }
 
   case msg {
-    msg.SettingReset -> #(
-      State(..init(), settings:),
-      effect.batch([
-        msg.ToastChange(msg.ToastAdd(toast.create_info_toast("Storage reset")))
-          |> disp,
-        msg.PlayerMove(world.Apartment)
-          |> disp,
-      ]),
-    )
+    msg.SettingReset ->
+      init()
+      |> pair.map_first(fn(s) { State(..s, settings:) })
+      |> pair.map_second(fn(eff) {
+        effect.batch([
+          eff,
+          msg.ToastChange(
+            msg.ToastAdd(toast.create_info_toast("Storage reset")),
+          )
+            |> disp,
+        ])
+      })
     msg.SettingToggleDisplay ->
       State(..state, overlay: case state.overlay == state.OverlaySaveLoad {
         False -> state.OverlaySaveLoad
@@ -460,7 +474,9 @@ fn try_save_to_localstore(msg: Msg, state: State) -> State {
       | msg.PlayerShop(_)
       | msg.PlayerConsum(_)
       if state.settings.autosave
-    -> localstore.try_save_game_state(state.p, state |> state.get_fight)
+    -> {
+      localstore.try_save_game_state(state.p, state |> state.get_fight)
+    }
     _ -> Nil
   }
   state

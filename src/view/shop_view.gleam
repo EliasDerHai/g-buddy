@@ -2,12 +2,13 @@ import env/action
 import env/shop.{type Buyable}
 import gleam/int
 import gleam/list
-import gleam/option
+import gleam/option.{None}
+import gleam/set
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 import msg.{type Msg, PlayerShop, ShopBuy}
-import state/check
+import state/check.{AlreadyOwned}
 import state/state.{type State}
 import util/either
 import view/generic_view
@@ -25,20 +26,26 @@ pub fn view_shop(s: State, buyables: List(Buyable)) -> List(Element(Msg)) {
 }
 
 fn view_buyable(s: State, buyable: Buyable) -> Element(Msg) {
-  let name = case buyable.id {
-    either.Left(weapon_id) -> texts.weapon(weapon_id)
-    either.Right(consumable_id) -> texts.consumable(consumable_id)
+  let #(name, saturated) = case buyable.id {
+    either.Left(weapon_id) -> #(
+      texts.weapon(weapon_id),
+      s.p.inventory.collected_weapons |> set.contains(weapon_id),
+    )
+    either.Right(consumable_id) -> #(texts.consumable(consumable_id), False)
   }
 
   let can_afford = s.p.money.v >= buyable.price
-  let disabled_reason = case can_afford {
-    True -> option.None
-    False ->
-      option.Some(
-        check.Insufficient(action.Money(cost: buyable.price))
-        |> texts.disabled_reason,
-      )
-  }
+  let disabled_reason =
+    case can_afford {
+      True -> None
+      False ->
+        option.Some(check.Insufficient(action.Money(cost: buyable.price)))
+    }
+    |> option.or(case saturated {
+      False -> None
+      True -> option.Some(AlreadyOwned)
+    })
+    |> option.map(texts.disabled_reason)
 
   let label = name <> " - $" <> int.to_string(buyable.price)
 
@@ -46,7 +53,7 @@ fn view_buyable(s: State, buyable: Buyable) -> Element(Msg) {
     label: label,
     on_click: PlayerShop(ShopBuy(item: buyable)),
     disabled_reason: disabled_reason,
-    icon: option.None,
+    icon: None,
     style: generic_view.Primary,
     full_width: True,
   )

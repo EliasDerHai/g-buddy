@@ -8,6 +8,7 @@ import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
+import gleam/set
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
@@ -25,6 +26,7 @@ import view/setting_view
 import view/shop_view
 import view/story_view
 import view/texts
+import view/tooltip
 
 pub fn view(s: State) -> Element(Msg) {
   html.div([], [
@@ -70,21 +72,21 @@ pub fn view(s: State) -> Element(Msg) {
   ])
 }
 
-fn view_left_hud(model: State) -> List(Element(Msg)) {
+fn view_left_hud(state: State) -> List(Element(Msg)) {
   [
     html.div(
       [attribute.class("flex flex-col")],
       [
-        "Health: " <> model.p.health.v |> int.to_string,
-        "Energy: " <> model.p.energy.v |> int.to_string,
-        "Job: " <> model.p.job |> texts.job,
+        "Health: " <> state.p.health.v |> int.to_string,
+        "Energy: " <> state.p.energy.v |> int.to_string,
+        "Job: " <> state.p.job |> texts.job,
       ]
         |> list.map(generic_view.simple_text)
         |> list.append([
           "Items:" |> generic_view.simple_text,
           html.div(
             [attribute.class("flex flex-col gap-2 top-2")],
-            model.p.inventory.consumables
+            state.p.inventory.consumables
               |> dict.to_list
               |> list.map(fn(tuple) {
                 let #(consumable_id, amount) = tuple
@@ -107,20 +109,46 @@ fn view_left_hud(model: State) -> List(Element(Msg)) {
   ]
 }
 
-fn view_right_hud(model: State) -> List(Element(Msg)) {
+fn view_weapon(state: State) -> Element(Msg) {
+  let available_weapons =
+    state.p.inventory.collected_weapons
+    |> set.to_list
+    |> list.map(fn(weapon_id) {
+      generic_view.SelectOption(
+        value: weapon_id,
+        label: texts.weapon(weapon_id),
+      )
+    })
+
+  html.div([], [
+    html.p([], "Weapon:" |> generic_view.simple_text |> list_extension.of_one),
+    generic_view.select(
+      state.p.equipped_weapon,
+      available_weapons,
+      msg.PlayerEquipWeapon,
+      fn(weapon_id) { weapon_id |> texts.weapon },
+    ),
+  ])
+  |> tooltip.tooltip_top(state.active_tooltip, "weapon_picker", fn() {
+    ["..." |> generic_view.simple_text]
+  })
+}
+
+fn view_right_hud(state: State) -> List(Element(Msg)) {
   [
     html.div(
       [attribute.class("flex flex-col")],
       [
-        "Day: " <> model.p.day_count |> int.to_string,
-        "Cash: $" <> model.p.money.v |> int.to_string,
-        "Weapon: " <> model.p.equipped_weapon |> texts.weapon,
-        "Strength: " <> model.p.skills.strength |> int.to_string,
-        "Dexterity: " <> model.p.skills.dexterity |> int.to_string,
-        "Intelligence: " <> model.p.skills.intelligence |> int.to_string,
-        "Charm: " <> model.p.skills.charm |> int.to_string,
+        "Day: " <> state.p.day_count |> int.to_string,
+        "Cash: $" <> state.p.money.v |> int.to_string,
+        //"Weapon: " <> model.p.equipped_weapon |> texts.weapon,
+        "Strength: " <> state.p.skills.strength |> int.to_string,
+        "Dexterity: " <> state.p.skills.dexterity |> int.to_string,
+        "Intelligence: " <> state.p.skills.intelligence |> int.to_string,
+        "Charm: " <> state.p.skills.charm |> int.to_string,
       ]
-        |> list.map(generic_view.simple_text),
+        |> list.map(generic_view.simple_text)
+        |> list.append(view_weapon(state) |> list_extension.of_one),
     ),
     html.div([], [
       generic_view.button_with_icon(

@@ -8,6 +8,7 @@ import state/init
 import state/state
 
 pub fn reward_test() {
+  io.println("\nlvl-rewards:")
   list.range(1, 20)
   |> list.each(fn(i) {
     let x = enemy.pure_reward(i)
