@@ -1,28 +1,28 @@
 # Location Image Prompts
 
 ## Apartment
-gritty urban apartment interior with worn furniture, dim lighting from a single window, unmade bed against left wall, small kitchenette to the right, realistic digital art with moody atmosphere
+urban apartment interior, lived-in furniture and wall posters, evening light through window, bed against left wall, small kitchenette to the right, stylized illustration with muted colors
 
 ## Neighbor
-narrow apartment hallway with peeling paint, flickering fluorescent lights, doors on both sides, graffiti on walls, worn carpet, urban decay aesthetic, realistic digital art
+apartment hallway with numbered doors, overhead fluorescent lighting, doors on both sides, graffiti tags on walls, worn carpet, stylized urban illustration
 
 ## BusStop
-urban bus stop at dusk, cracked sidewalk, metal bench with graffiti, flickering streetlight overhead, empty street with distant city lights, gritty realistic style
+city bus stop at dusk, weathered sidewalk, metal bench with some graffiti, streetlight casting warm glow, distant city buildings, stylized illustration style
 
 ## DrugCorner
-shadowy street corner at night, brick building walls, dim streetlight creating dramatic shadows, urban alley visible to the side, atmospheric fog, dark cinematic lighting
+urban street corner at night, brick building walls, streetlight creating atmospheric shadows, side alley entrance visible, light fog, stylized noir illustration
 
 ## Arms (Arms & Ammo)
-underground gun shop interior, display cases with weapons along walls, counter in center, dim overhead lighting, concrete walls, gritty realistic digital art
+basement weapon shop interior, display cases with equipment along walls, counter in center, industrial lighting, exposed brick and concrete, stylized illustration
 
 ## GasStation
-rundown gas station at night, fluorescent lights illuminating pump area, small convenience store visible in background, cracked asphalt, urban decay aesthetic
+urban gas station at night, neon signs and pump area lights, small convenience store in background, worn asphalt with paint markings, stylized illustration
 
 ## FightClub
-underground fight arena, makeshift ring in center with rope barriers, crowd space around edges, harsh overhead lights, concrete walls, gritty atmospheric lighting
+underground fight venue, makeshift ring in center with rope barriers, standing room around edges, overhead work lights, concrete walls with graffiti, stylized illustration
 
 ## CityCenter
-urban downtown street view, tall buildings on both sides, streetlights and neon signs, wet pavement reflecting lights, nighttime atmosphere, cinematic realistic style
+downtown street at night, tall buildings on both sides, neon signs and streetlights, wet pavement with reflections, urban atmosphere, stylized illustration
 
 ## Gym
-gritty boxing gym interior, punching bags hanging left, weight equipment right, worn boxing ring in background, harsh fluorescent lighting, concrete floors
+street-level boxing gym, heavy bags hanging left, weight equipment right, boxing ring in background, fluorescent lighting, concrete floors, stylized illustration
