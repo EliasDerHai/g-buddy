@@ -1,4 +1,5 @@
 import env/fight_types.{type Crit, type Dmg, Crit, Dmg}
+import env/weapon.{type WeaponId}
 import gleam/list
 import state/state.{type Fight, type Player, type SkillId}
 
@@ -6,6 +7,8 @@ pub type AttackId {
   NormalBlow
   PowerSlam
   KarateKick
+  BrassBlow
+  BrassPowerBlow
 }
 
 // NOTE: don't forget to add new AttackIds...
@@ -18,6 +21,7 @@ pub type AttackMove {
     stamina_cost: Int,
     dmg: Dmg,
     crit: Crit,
+    weapon: WeaponId,
   )
 }
 
@@ -30,24 +34,45 @@ fn get_attack(id: AttackId) {
         stamina_cost: 35,
         dmg: Dmg(1),
         crit: Crit(0.0),
+        weapon: weapon.NoWeapon,
       )
     KarateKick ->
       AttackMove(
         id:,
-        //[#(state.Dexterity, 5)]
+        // TODO: revert [#(state.Dexterity, 5)]
         requirements: [],
         stamina_cost: 45,
         dmg: Dmg(3),
         crit: Crit(0.4),
+        weapon: weapon.NoWeapon,
       )
     PowerSlam ->
       AttackMove(
         id:,
-        //[#(state.Strength, 5)]
+        // TODO: revert [#(state.Strength, 5)]
         requirements: [],
         stamina_cost: 60,
         dmg: Dmg(5),
         crit: Crit(0.0),
+        weapon: weapon.NoWeapon,
+      )
+    BrassBlow ->
+      AttackMove(
+        id:,
+        requirements: [],
+        stamina_cost: 45,
+        dmg: Dmg(3),
+        crit: Crit(0.3),
+        weapon: weapon.BrassKnuckles,
+      )
+    BrassPowerBlow ->
+      AttackMove(
+        id:,
+        requirements: [#(state.Strength, 5)],
+        stamina_cost: 65,
+        dmg: Dmg(8),
+        crit: Crit(0.3),
+        weapon: weapon.BrassKnuckles,
       )
   }
 }

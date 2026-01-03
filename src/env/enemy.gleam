@@ -34,7 +34,7 @@ pub fn get_enemy(id: EnemyId) {
         def: 0 |> Def,
         crit: 0.05 |> Crit,
         health: 4,
-        energy: 50,
+        energy: 20,
       )
     Lvl2 ->
       Enemy(
@@ -44,7 +44,7 @@ pub fn get_enemy(id: EnemyId) {
         def: 0 |> Def,
         crit: 0.15 |> Crit,
         health: 6,
-        energy: 50,
+        energy: 30,
       )
     Lvl10 ->
       Enemy(

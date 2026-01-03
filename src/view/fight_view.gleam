@@ -222,8 +222,14 @@ pub fn view_attack_button(state: State, attack: AttackMove) -> Element(Msg) {
 }
 
 fn attack_tooltip(attack: AttackMove) {
-  let attack.AttackMove(id: _, requirements: _, stamina_cost:, dmg:, crit:) =
-    attack
+  let attack.AttackMove(
+    id: _,
+    requirements: _,
+    stamina_cost:,
+    dmg:,
+    crit:,
+    weapon: _,
+  ) = attack
 
   [
     html.div([attribute.class("space-y-2")], [

@@ -62,7 +62,7 @@ pub fn action(id: ActionId) {
 pub fn disabled_reason(id: DeniedReason) -> String {
   case id {
     check.Insufficient(action.Energy(cost:)) ->
-      "Not enough energy (requires ⚡️" <> cost |> int.to_string <> ")"
+      "Not enough energy (requires ⚡️ " <> cost |> int.to_string <> ")"
     check.Insufficient(action.Money(cost:)) ->
       "Not enough money (price $" <> cost |> int.to_string <> ")"
     check.AlreadyOwned -> "Already owned"
@@ -74,6 +74,8 @@ pub fn attack(id: AttackId) -> String {
     attack.NormalBlow -> "Normal Blow"
     attack.PowerSlam -> "Power Slam"
     attack.KarateKick -> "Karate Kick"
+    attack.BrassBlow -> "Normal Brass Blow"
+    attack.BrassPowerBlow -> "Power Brass Blow"
   }
 }
 
