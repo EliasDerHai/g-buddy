@@ -102,7 +102,6 @@ fn update(state: State, msg: Msg) -> #(State, Effect(Msg)) {
     msg.SettingChange(msg) -> handle_setting_toggle(state, msg)
     msg.ToastChange(msg) -> handle_toast(state, msg)
     msg.TooltipChange(msg) -> handle_tooltip(state, msg)
-    // TODO: remove other msgs and use OpenOverlay instead of various others
     msg.OpenOverlay(overlay) -> State(..state, overlay:) |> no_eff
     msg.CloseOverlay -> State(..state, overlay: state.NoOverlay) |> no_eff
   }
@@ -319,9 +318,6 @@ fn handle_shop(state: State, shop: PlayerShopMsg) -> #(State, Effect(Msg)) {
 
   case shop {
     msg.ShopBuy(item:) -> state |> buy(item)
-    msg.ShopClose -> State(..state, overlay: state.NoOverlay)
-    msg.ShopOpen(options:) ->
-      State(..state, overlay: state.OverlayShop(options))
   }
   |> no_eff
 }
@@ -407,7 +403,6 @@ fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(Msg))
       state.Settings(..state.settings, autoload: autoload |> bool.negate)
     msg.SettingToggleAutosave ->
       state.Settings(..state.settings, autosave: autosave |> bool.negate)
-    msg.SettingToggleDisplay -> state.settings
   }
 
   case msg {
@@ -423,12 +418,6 @@ fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(Msg))
             |> disp,
         ])
       })
-    msg.SettingToggleDisplay ->
-      State(..state, overlay: case state.overlay == state.OverlaySaveLoad {
-        False -> state.OverlaySaveLoad
-        True -> state.NoOverlay
-      })
-      |> no_eff
     _ -> State(..state, settings:) |> no_eff
   }
 }

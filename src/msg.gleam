@@ -36,8 +36,6 @@ pub type FightMove {
 }
 
 pub type PlayerShopMsg {
-  ShopOpen(options: List(Buyable))
-  ShopClose
   ShopBuy(item: Buyable)
 }
 
@@ -48,7 +46,6 @@ pub type StoryMsg {
 }
 
 pub type SettingMsg {
-  SettingToggleDisplay
   SettingToggleAutoload
   SettingToggleAutosave
   SettingReset

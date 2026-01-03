@@ -13,9 +13,12 @@ import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
-import msg.{type Msg, PlayerAction, PlayerMove, PlayerShop, PlayerWork, ShopOpen}
+import msg.{type Msg, PlayerAction, PlayerMove, PlayerWork}
 import state/check
-import state/state.{type State}
+import state/state.{
+  type State, NoOverlay, OverlayFight, OverlayQuests, OverlaySaveLoad,
+  OverlayShop, OverlayStory,
+}
 import state/toast
 import util/list_extension
 import view/fight_view
@@ -52,21 +55,21 @@ pub fn view(s: State) -> Element(Msg) {
     {
       let content = fn() {
         case s.overlay {
-          state.NoOverlay -> []
-          state.OverlayFight(fight:) -> fight_view.view_fight(s, fight)
-          state.OverlayQuests -> quests_view.view_quests(s)
-          state.OverlaySaveLoad -> setting_view.view_settings(s)
-          state.OverlayShop(buyables:) -> shop_view.view_shop(s, buyables)
-          state.OverlayStory(chapter_id:, node_id:) ->
+          NoOverlay -> []
+          OverlayFight(fight:) -> fight_view.view_fight(s, fight)
+          OverlayQuests -> quests_view.view_quests(s)
+          OverlaySaveLoad -> setting_view.view_settings(s)
+          OverlayShop(buyables:) -> shop_view.view_shop(s, buyables)
+          OverlayStory(chapter_id:, node_id:) ->
             story_view.view_story(chapter_id, node_id)
         }
       }
       let close = case s.overlay {
-        state.OverlayFight(_) | state.OverlayStory(_, _) -> None
+        OverlayFight(_) | OverlayStory(_, _) -> None
         _ -> Some(msg.CloseOverlay)
       }
 
-      generic_view.modal(s.overlay != state.NoOverlay, close, content)
+      generic_view.modal(s.overlay != NoOverlay, close, content)
     },
     toast.view_toasts(s.toasts),
   ])
@@ -103,7 +106,7 @@ fn view_left_hud(state: State) -> List(Element(Msg)) {
       generic_view.button_with_icon(
         icons.scroll_text([]),
         "Quests",
-        msg.OpenOverlay(state.OverlayQuests),
+        msg.OpenOverlay(OverlayQuests),
       ),
     ]),
   ]
@@ -154,7 +157,7 @@ fn view_right_hud(state: State) -> List(Element(Msg)) {
       generic_view.button_with_icon(
         icons.settings([]),
         "Settings",
-        msg.SettingChange(msg.SettingToggleDisplay),
+        msg.OpenOverlay(OverlaySaveLoad),
       ),
     ]),
   ]
@@ -224,7 +227,7 @@ fn view_navigation_buttons(state: State) -> List(Element(Msg)) {
             generic_view.button_with_icon(
               icons.shopping_cart([]),
               "Buy",
-              PlayerShop(ShopOpen(buyables)),
+              msg.OpenOverlay(OverlayShop(buyables)),
             ),
           )
           |> list_extension.append_when(
