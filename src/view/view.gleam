@@ -9,6 +9,7 @@ import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/set
+import gleam/string
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
@@ -280,6 +281,27 @@ fn view_actions(state: State) -> List(Element(Msg)) {
         |> list.first
         |> option.from_result
         |> option.map(texts.disabled_reason),
+    )
+    |> tooltip.tooltip_top(
+      state.active_tooltip,
+      "action_" <> a.id |> string.inspect,
+      fn() {
+        a.costs
+        |> list.map(fn(cost) {
+          case cost {
+            action.Energy(cost:) ->
+              { "⚡️" <> cost |> int.to_string }
+              |> generic_view.simple_text
+              |> list_extension.of_one
+              |> html.p([], _)
+            action.Money(cost:) ->
+              { "$" <> cost |> int.to_string }
+              |> generic_view.simple_text
+              |> list_extension.of_one
+              |> html.p([], _)
+          }
+        })
+      },
     )
   })
 }
