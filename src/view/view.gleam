@@ -31,6 +31,7 @@ import view/shop_view
 import view/story_view
 import view/texts
 import view/tooltip
+import view/weapon_view
 
 pub fn view(s: State) -> Element(Msg) {
   html.div([], [
@@ -63,6 +64,7 @@ pub fn view(s: State) -> Element(Msg) {
           OverlayShop(buyables:) -> shop_view.view_shop(s, buyables)
           OverlayStory(chapter_id:, node_id:) ->
             story_view.view_story(chapter_id, node_id)
+          state.OverlayWeaponSelect -> weapon_view.view_weapons(s)
         }
       }
       let close = case s.overlay {
@@ -113,31 +115,6 @@ fn view_left_hud(state: State) -> List(Element(Msg)) {
   ]
 }
 
-fn view_weapon(state: State) -> Element(Msg) {
-  let available_weapons =
-    state.p.inventory.collected_weapons
-    |> set.to_list
-    |> list.map(fn(weapon_id) {
-      generic_view.SelectOption(
-        value: weapon_id,
-        label: texts.weapon(weapon_id),
-      )
-    })
-
-  html.div([], [
-    html.p([], "Weapon:" |> generic_view.simple_text |> list_extension.of_one),
-    generic_view.select(
-      state.p.equipped_weapon,
-      available_weapons,
-      msg.PlayerEquipWeapon,
-      fn(weapon_id) { weapon_id |> texts.weapon },
-    ),
-  ])
-  |> tooltip.tooltip_top(state.active_tooltip, "weapon_picker", fn() {
-    ["..." |> generic_view.simple_text]
-  })
-}
-
 fn view_right_hud(state: State) -> List(Element(Msg)) {
   [
     html.div(
@@ -145,14 +122,30 @@ fn view_right_hud(state: State) -> List(Element(Msg)) {
       [
         "Day: " <> state.p.day_count |> int.to_string,
         "Cash: 💲" <> state.p.money.v |> int.to_string,
-        //"Weapon: " <> model.p.equipped_weapon |> texts.weapon,
         "Strength: " <> state.p.skills.strength |> int.to_string,
         "Dexterity: " <> state.p.skills.dexterity |> int.to_string,
         "Intelligence: " <> state.p.skills.intelligence |> int.to_string,
         "Charm: " <> state.p.skills.charm |> int.to_string,
       ]
         |> list.map(generic_view.simple_text)
-        |> list.append(view_weapon(state) |> list_extension.of_one),
+        |> list.append([
+          html.span([attribute.class("flex align-middle")], [
+            {
+              "Weapon: "
+              <> state.p.equipped_weapon
+              |> texts.weapon
+            }
+              |> generic_view.simple_text,
+            generic_view.custom_button(generic_view.ButtonConfig(
+              label: "",
+              on_click: msg.OpenOverlay(state.OverlayWeaponSelect),
+              disabled_reason: None,
+              icon: Some(icons.refresh_ccw([attribute.class("size-4")])),
+              style: generic_view.Transparent,
+              full_width: False,
+            )),
+          ]),
+        ]),
     ),
     html.div([], [
       generic_view.button_with_icon(

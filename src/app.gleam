@@ -388,7 +388,11 @@ fn handle_weapon_equip(state: State, w: WeaponId) -> #(State, Effect(Msg)) {
     True -> Nil
   }
 
-  state.set_p(state, Player(..state.p, equipped_weapon: w)) |> no_eff
+  state.set_p(
+    State(..state, overlay: state.NoOverlay),
+    Player(..state.p, equipped_weapon: w),
+  )
+  |> no_eff
 }
 
 fn handle_setting_toggle(state: State, msg: SettingMsg) -> #(State, Effect(Msg)) {

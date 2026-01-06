@@ -27,6 +27,7 @@ pub type Overlay {
   OverlaySaveLoad
   OverlayStory(chapter_id: StoryChapterId, node_id: Int)
   OverlayQuests
+  OverlayWeaponSelect
 }
 
 pub type Money {

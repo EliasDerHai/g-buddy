@@ -11,8 +11,9 @@ import view/icons
 
 pub type ButtonStyle {
   Primary
-  Warning
   Secondary
+  Warning
+  Transparent
 }
 
 pub type ButtonConfig {
@@ -116,7 +117,11 @@ pub fn custom_button(config: ButtonConfig) -> Element(Msg) {
   let is_disabled = disabled_reason |> option.is_some
 
   let base_classes =
-    "px-6 py-3 rounded-lg font-medium transition-colors "
+    case style {
+      Transparent -> "px-3 py-3"
+      _ -> "px-6 py-3 "
+    }
+    <> "rounded-lg font-medium transition-colors "
     <> case icon {
       Some(_) -> "flex gap-2 items-center justify-center "
       None -> ""
@@ -132,6 +137,7 @@ pub fn custom_button(config: ButtonConfig) -> Element(Msg) {
     False, Warning -> "bg-red-400 text-white hover:bg-red-600 cursor-pointer"
     False, Secondary ->
       "bg-gray-600 text-white hover:bg-gray-700 cursor-pointer"
+    False, Transparent -> "text-white cursor-pointer"
   }
 
   let button_element =
