@@ -81,9 +81,9 @@ fn view_left_hud(state: State) -> List(Element(Msg)) {
     html.div(
       [attribute.class("flex flex-col")],
       [
-        "Health: " <> state.p.health.v |> int.to_string,
-        "Energy: " <> state.p.energy.v |> int.to_string,
-        "Job: " <> state.p.job |> texts.job,
+        "Health: 💜" <> state.p.health.v |> int.to_string,
+        "Energy: ⚡" <> state.p.energy.v |> int.to_string,
+        "Job: 💼" <> state.p.job |> texts.job,
       ]
         |> list.map(generic_view.simple_text)
         |> list.append([
@@ -144,7 +144,7 @@ fn view_right_hud(state: State) -> List(Element(Msg)) {
       [attribute.class("flex flex-col")],
       [
         "Day: " <> state.p.day_count |> int.to_string,
-        "Cash: $" <> state.p.money.v |> int.to_string,
+        "Cash: 💲" <> state.p.money.v |> int.to_string,
         //"Weapon: " <> model.p.equipped_weapon |> texts.weapon,
         "Strength: " <> state.p.skills.strength |> int.to_string,
         "Dexterity: " <> state.p.skills.dexterity |> int.to_string,
@@ -273,35 +273,51 @@ fn navigation_button(location_id: LocationId, direction: String) -> Element(Msg)
 fn view_actions(state: State) -> List(Element(Msg)) {
   action.get_action_by_location(state.p.location)
   |> list.map(fn(a) {
-    generic_view.simple_button(
-      a.id |> texts.action,
-      PlayerAction(a),
-      state.p
-        |> check.check_action_costs(a.costs)
-        |> list.first
-        |> option.from_result
-        |> option.map(texts.disabled_reason),
-    )
-    |> tooltip.tooltip_top(
-      state.active_tooltip,
-      "action_" <> a.id |> string.inspect,
-      fn() {
+    let button =
+      generic_view.simple_button(
+        a.id |> texts.action,
+        PlayerAction(a),
+        state.p
+          |> check.check_action_costs(a.costs)
+          |> list.first
+          |> option.from_result
+          |> option.map(texts.disabled_reason),
+      )
+
+    let tooltip_content = {
+      let desc = texts.action_description(a.id)
+
+      let cost_elements =
         a.costs
         |> list.map(fn(cost) {
           case cost {
-            action.Energy(cost:) ->
-              { "⚡️" <> cost |> int.to_string }
-              |> generic_view.simple_text
-              |> list_extension.of_one
-              |> html.p([], _)
-            action.Money(cost:) ->
-              { "$" <> cost |> int.to_string }
-              |> generic_view.simple_text
-              |> list_extension.of_one
-              |> html.p([], _)
+            action.Energy(cost:) -> "-⚡️" <> cost |> int.to_string
+            action.Money(cost:) -> "-💲" <> cost |> int.to_string
           }
         })
-      },
-    )
+
+      case desc {
+        Some(description) ->
+          [description]
+          |> list.append(cost_elements)
+        None -> cost_elements
+      }
+    }
+
+    case tooltip_content |> list.is_empty {
+      True -> button
+      False ->
+        button
+        |> tooltip.tooltip_top(
+          state.active_tooltip,
+          "action_" <> a.id |> string.inspect,
+          fn() {
+            tooltip_content
+            |> list.map(fn(txt) {
+              html.p([], [txt |> generic_view.simple_text])
+            })
+          },
+        )
+    }
   })
 }

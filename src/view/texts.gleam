@@ -5,6 +5,7 @@ import env/shop.{type ConsumableId}
 import env/weapon.{type WeaponId}
 import env/world.{type LocationId}
 import gleam/int
+import gleam/option.{type Option, None, Some}
 import state/check.{type DeniedReason}
 import state/state.{type JobId}
 
@@ -46,7 +47,7 @@ pub fn enemy(id: EnemyId) -> String {
   }
 }
 
-pub fn action(id: ActionId) {
+pub fn action(id: ActionId) -> String {
   case id {
     action.ActionBusTo(dest) ->
       "Bus to "
@@ -59,12 +60,19 @@ pub fn action(id: ActionId) {
   }
 }
 
+pub fn action_description(id: ActionId) -> Option(String) {
+  case id {
+    action.ActionSleep -> "Recharge energy" |> Some
+    _ -> None
+  }
+}
+
 pub fn disabled_reason(id: DeniedReason) -> String {
   case id {
     check.Insufficient(action.Energy(cost:)) ->
       "Not enough energy (requires ⚡️ " <> cost |> int.to_string <> ")"
     check.Insufficient(action.Money(cost:)) ->
-      "Not enough money (price $" <> cost |> int.to_string <> ")"
+      "Not enough money (price 💲" <> cost |> int.to_string <> ")"
     check.AlreadyOwned -> "Already owned"
   }
 }

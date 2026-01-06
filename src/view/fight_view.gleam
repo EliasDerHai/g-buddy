@@ -169,7 +169,7 @@ pub fn view_fight(state: State, fight: Fight) -> List(Element(Msg)) {
           html.div([], [
             html.p([attribute.class("text-green-400")], [html.text("Victory!")]),
             html.p([], [
-              { "Enemy dropped: $" <> reward |> int.to_string }
+              { "Enemy dropped: 💲" <> reward |> int.to_string }
               |> generic_view.simple_text,
             ]),
           ])

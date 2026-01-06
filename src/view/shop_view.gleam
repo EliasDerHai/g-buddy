@@ -47,7 +47,7 @@ fn view_buyable(s: State, buyable: Buyable) -> Element(Msg) {
     })
     |> option.map(texts.disabled_reason)
 
-  let label = name <> " - $" <> int.to_string(buyable.price)
+  let label = name <> " -💲" <> int.to_string(buyable.price)
 
   generic_view.ButtonConfig(
     label: label,
